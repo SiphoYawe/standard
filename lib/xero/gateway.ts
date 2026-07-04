@@ -1,12 +1,16 @@
 import {
   XeroClient,
+  // Value imports: these classes carry the runtime enum values (TypeEnum,
+  // StatusEnum, LineAmountTypes) used when constructing write bodies for the
+  // Story 1.4 seed. They double as types in type positions.
+  Invoice,
+  BankTransaction,
+  LineAmountTypes,
   type TokenSet,
   type TokenSetParameters,
   type Contact,
   type Contacts,
-  type Invoice,
   type Invoices,
-  type BankTransaction,
   type BankTransactions,
   type Payment,
   type Payments,
@@ -21,6 +25,9 @@ import {
   type TrackingOption,
   type TrackingOptions,
   type ReportWithRows,
+  type Account,
+  type Accounts,
+  type LineItem,
 } from "xero-node";
 import { getStore } from "@/lib/store/supabase";
 
@@ -29,8 +36,8 @@ import { getStore } from "@/lib/store/supabase";
  * imports `xero-node` or issues Xero HTTP. It is the sole holder of tokens
  * (AD-10) and the sole place the per-tenant daily rate budget is counted
  * (NFR-RateLimit). Every read/write in the spine's "Xero API Surface" table
- * is exposed here as a typed method; higher layers (ingest, write-back) call
- * these and never touch the SDK.
+ * is exposed here as a typed method; higher layers (ingest, write-back, the
+ * demo seed) call these and never touch the SDK.
  *
  * Cache-first (AD-3): only `POST /api/refresh` drives the read methods; all
  * downstream stages read the Supabase snapshot, not this gateway.
@@ -44,30 +51,146 @@ export class XeroGatewayError extends Error {
   constructor(
     message: string,
     readonly code: string,
+    /** Upstream HTTP status when the failure came from a Xero API call. */
+    readonly status?: number,
   ) {
     super(message);
     this.name = "XeroGatewayError";
   }
 }
 
-/** No stored tokens / refresh failure for a tenant (AD-10). */
+/** No stored tokens / refresh failure / rejected token for a tenant (AD-10). */
 export class XeroAuthError extends XeroGatewayError {
-  constructor(message: string) {
-    super(message, "XERO_AUTH");
+  constructor(message: string, status?: number) {
+    super(message, "XERO_AUTH", status);
     this.name = "XeroAuthError";
   }
 }
 
-/** Daily/near-cap budget refusal (NFR-RateLimit). */
+/** Daily/near-cap budget refusal or an upstream 429 (NFR-RateLimit). */
 export class XeroRateLimitError extends XeroGatewayError {
-  constructor(message: string) {
-    super(message, "XERO_RATE_LIMIT");
+  constructor(message: string, status?: number) {
+    super(message, "XERO_RATE_LIMIT", status);
     this.name = "XeroRateLimitError";
   }
 }
 
 /* ------------------------------------------------------------------ *
- * Token custody (AD-10) — the gateway is the only holder of tokens.
+ * Xero error normalisation.
+ * xero-node v18 wraps axios: on any non-2xx it rejects with a JSON STRING
+ * (JSON.stringify of `{ response: { statusCode, body, headers }, body }`),
+ * and on lower-level failures it may reject with that object or a raw Error.
+ * Without this, a 401/429/400 from Xero would surface as an opaque string and
+ * lose its status and message. We parse whatever shape arrives, pull the HTTP
+ * status and the human Xero message, and raise a typed gateway error so callers
+ * (and the { data, error } envelope) get an actionable code + message.
+ * ------------------------------------------------------------------ */
+
+interface ParsedXeroError {
+  status?: number;
+  message?: string;
+  retryAfter?: string;
+}
+
+function pickString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim().length ? value : undefined;
+}
+
+/** Extract a human message from a Xero error body (several shapes exist). */
+function messageFromBody(body: unknown): string | undefined {
+  if (body == null) return undefined;
+  if (typeof body === "string") return pickString(body);
+  if (typeof body !== "object") return undefined;
+  const b = body as Record<string, unknown>;
+
+  // Validation errors: Elements[].ValidationErrors[].Message
+  const elements = b.Elements ?? b.elements;
+  if (Array.isArray(elements)) {
+    const msgs: string[] = [];
+    for (const el of elements) {
+      const ve = (el as Record<string, unknown>)?.ValidationErrors ?? (el as Record<string, unknown>)?.validationErrors;
+      if (Array.isArray(ve)) {
+        for (const v of ve) {
+          const m = pickString((v as Record<string, unknown>)?.Message ?? (v as Record<string, unknown>)?.message);
+          if (m) msgs.push(m);
+        }
+      }
+    }
+    if (msgs.length) return msgs.join("; ");
+  }
+
+  return (
+    pickString(b.Detail ?? b.detail) ??
+    pickString(b.Message ?? b.message) ??
+    pickString(b.Title ?? b.title) ??
+    pickString(b.error_description) ??
+    pickString(b.error)
+  );
+}
+
+function readErrorEnvelope(obj: Record<string, unknown>): ParsedXeroError {
+  const response = (obj.response ?? {}) as Record<string, unknown>;
+  const headers = (response.headers ?? {}) as Record<string, unknown>;
+  const status =
+    (typeof response.statusCode === "number" ? response.statusCode : undefined) ??
+    (typeof response.status === "number" ? response.status : undefined) ??
+    (typeof obj.statusCode === "number" ? (obj.statusCode as number) : undefined);
+  const body = response.body ?? response.data ?? obj.body ?? obj.data;
+  const retryAfter =
+    pickString(headers["retry-after"]) ?? pickString(headers["Retry-After"]);
+  return { status, message: messageFromBody(body), retryAfter };
+}
+
+function parseXeroError(raw: unknown): ParsedXeroError {
+  if (typeof raw === "string") {
+    try {
+      return readErrorEnvelope(JSON.parse(raw) as Record<string, unknown>);
+    } catch {
+      return { message: raw };
+    }
+  }
+  if (raw && typeof raw === "object") {
+    const parsed = readErrorEnvelope(raw as Record<string, unknown>);
+    if (parsed.status || parsed.message) return parsed;
+    if (raw instanceof Error) return { message: raw.message };
+  }
+  return {};
+}
+
+/** Turn any Xero SDK rejection into a typed gateway error. */
+function normalizeXeroError(raw: unknown): XeroGatewayError {
+  if (raw instanceof XeroGatewayError) return raw;
+  const { status, message, retryAfter } = parseXeroError(raw);
+  const detail = message ? `: ${message}` : "";
+
+  if (status === 401) {
+    return new XeroAuthError(
+      `Xero rejected the access token (401)${detail}. Reconnect the org at /api/connect.`,
+      401,
+    );
+  }
+  if (status === 429) {
+    const wait = retryAfter ? ` Retry after ${retryAfter}s.` : "";
+    return new XeroRateLimitError(
+      `Xero rate limit hit (429)${detail}.${wait}`,
+      429,
+    );
+  }
+  if (typeof status === "number") {
+    return new XeroGatewayError(
+      `Xero API error ${status}${detail}.`,
+      `XERO_HTTP_${status}`,
+      status,
+    );
+  }
+  return new XeroGatewayError(
+    `Xero API call failed${detail || ": unknown error"}.`,
+    "XERO_API",
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Token custody (AD-10) - the gateway is the only holder of tokens.
  * Persisted server-side in Supabase `xero_tokens`, one row per tenant.
  * ------------------------------------------------------------------ */
 
@@ -97,7 +220,10 @@ export async function saveTokenSet(
       "Xero token set is missing access or refresh token (offline_access not granted?)",
     );
   }
-  const expiresAt = new Date((tokenSet.expires_at ?? 0) * 1000).toISOString();
+  // openid-client expresses expires_at in whole seconds since epoch.
+  const expiresAt = tokenSet.expires_at
+    ? new Date(tokenSet.expires_at * 1000).toISOString()
+    : new Date(Date.now() + 30 * 60_000).toISOString(); // access tokens live 30m
   const store = getStore();
   const { error } = await store.from("xero_tokens").upsert(
     {
@@ -174,7 +300,7 @@ export async function resolveDefaultTenantId(): Promise<string | null> {
 }
 
 /* ------------------------------------------------------------------ *
- * Rate budget (NFR-RateLimit) — per-tenant, per-day call counter.
+ * Rate budget (NFR-RateLimit) - per-tenant, per-day call counter.
  * Xero uncertified cap is 1,000/day/tenant and does NOT reset on demo reset,
  * so the gateway refuses non-essential reads as it approaches the cap.
  * ------------------------------------------------------------------ */
@@ -236,7 +362,7 @@ async function assertBudget(tenantId: string, essential: boolean): Promise<void>
   }
 }
 
-/** Xero returns 100 records per page for the paged accounting endpoints. */
+/** Xero returns up to 100 records per page for the paged accounting endpoints. */
 const PAGE_SIZE = 100;
 
 /* ------------------------------------------------------------------ *
@@ -262,6 +388,105 @@ function toTokenSetParameters(row: XeroTokenRecord): TokenSetParameters {
     expires_at: Math.floor(new Date(row.expiresAt).getTime() / 1000),
     scope: row.scopes,
     token_type: "Bearer",
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Seed helpers (Story 1.4). Plain input/return shapes so the demo seed
+ * (`scripts/seed-demo.ts`) can drive Xero writes THROUGH the gateway and
+ * never import `xero-node` itself, keeping AD-2 intact. The runtime app
+ * pipeline does not use these; they exist only to build the demo org.
+ * ------------------------------------------------------------------ */
+
+export interface SeedAccount {
+  accountID?: string;
+  code?: string;
+  name?: string;
+  /** Xero AccountType string, e.g. BANK, REVENUE, SALES, EXPENSE, DIRECTCOSTS. */
+  type?: string;
+  status?: string;
+}
+
+export interface SeedContactInput {
+  name: string;
+  email?: string;
+}
+
+export interface SeedLineInput {
+  description: string;
+  quantity?: number;
+  unitAmount: number;
+  accountCode: string;
+  itemCode?: string;
+}
+
+export interface SeedInvoiceInput {
+  type: "ACCREC" | "ACCPAY";
+  contactID: string;
+  reference?: string;
+  /** YYYY-MM-DD; defaults handled by Xero if omitted. */
+  date?: string;
+  dueDate?: string;
+  /** DRAFT (fully editable) or AUTHORISED (still editable while unpaid). */
+  status?: "DRAFT" | "AUTHORISED";
+  lineItems: SeedLineInput[];
+}
+
+export interface SeedBankTxnInput {
+  type: "SPEND" | "RECEIVE";
+  /** Bank account to post against (an account of type BANK). */
+  bankAccountID?: string;
+  bankAccountCode?: string;
+  contactID?: string;
+  reference?: string;
+  date?: string;
+  lineItems: SeedLineInput[];
+}
+
+export interface SeedLinkInput {
+  /** ACCPAY invoice or SPEND bank transaction carrying the cost. */
+  sourceTransactionID: string;
+  sourceLineItemID: string;
+  /** Customer the cost is billed on to. */
+  contactID: string;
+  /** ACCREC invoice that is the sale component. */
+  targetTransactionID?: string;
+  targetLineItemID?: string;
+}
+
+/** A created document reduced to just what the seed needs to link/report. */
+export interface SeedCreatedDoc {
+  id: string;
+  reference?: string;
+  total: number;
+  lineItems: { lineItemID: string; description?: string; lineAmount: number }[];
+}
+
+function toSeedLineItems(lines: SeedLineInput[]): LineItem[] {
+  return lines.map((l) => ({
+    description: l.description,
+    quantity: l.quantity ?? 1,
+    unitAmount: l.unitAmount,
+    accountCode: l.accountCode,
+    ...(l.itemCode ? { itemCode: l.itemCode } : {}),
+  }));
+}
+
+function toSeedCreatedDoc(doc: {
+  id?: string;
+  reference?: string;
+  total?: number;
+  lineItems?: LineItem[];
+}): SeedCreatedDoc {
+  return {
+    id: doc.id ?? "",
+    reference: doc.reference,
+    total: doc.total ?? 0,
+    lineItems: (doc.lineItems ?? []).map((li) => ({
+      lineItemID: li.lineItemID ?? "",
+      description: li.description,
+      lineAmount: li.lineAmount ?? 0,
+    })),
   };
 }
 
@@ -314,19 +539,36 @@ export class XeroGateway {
     return this.tenantId;
   }
 
-  private async ensureFreshToken(): Promise<void> {
+  /**
+   * Refresh the access token if it is within a minute of expiry (or always,
+   * when `force`). Persists and re-applies the rotated token set. A refresh
+   * failure means the stored refresh token is dead (60-day expiry / revoked),
+   * so it surfaces as a loud XeroAuthError prompting reconnect.
+   */
+  private async ensureFreshToken(force = false): Promise<void> {
     const expMs = new Date(this.tokenRow.expiresAt).getTime();
     // Refresh a minute early to avoid mid-flight expiry.
-    if (Date.now() < expMs - 60_000) return;
+    if (!force && Date.now() < expMs - 60_000) return;
 
-    const refreshed = await this.client.refreshToken();
+    let refreshed: TokenSet;
+    try {
+      refreshed = await this.client.refreshToken();
+    } catch (err) {
+      const detail = err instanceof Error ? `: ${err.message}` : "";
+      throw new XeroAuthError(
+        `Failed to refresh Xero token for tenant ${this.tenantId}${detail}. ` +
+          `The refresh token may have expired (60 days) or been revoked; reconnect at /api/connect.`,
+      );
+    }
     const scopes = refreshed.scope ?? this.tokenRow.scopes;
     await saveTokenSet(this.tenantId, this.tokenRow.tenantName, refreshed, scopes);
     this.tokenRow = {
       ...this.tokenRow,
       accessToken: refreshed.access_token ?? this.tokenRow.accessToken,
       refreshToken: refreshed.refresh_token ?? this.tokenRow.refreshToken,
-      expiresAt: new Date((refreshed.expires_at ?? 0) * 1000).toISOString(),
+      expiresAt: refreshed.expires_at
+        ? new Date(refreshed.expires_at * 1000).toISOString()
+        : this.tokenRow.expiresAt,
       scopes,
     };
   }
@@ -336,24 +578,47 @@ export class XeroGateway {
   }
 
   /**
-   * Wrap a single Xero HTTP call in the rate budget: assert budget, spend one
-   * call, then account it (NFR-RateLimit). `essential` writes/identity reads
-   * are only blocked at the hard cap; non-essential reads are blocked earlier.
+   * Wrap a single Xero HTTP call in the rate budget and error normalisation
+   * (NFR-RateLimit; AD-2). `essential` writes/identity reads are only blocked
+   * at the hard cap; non-essential reads are blocked earlier. Any SDK rejection
+   * is normalised to a typed error; a 401 triggers one forced token refresh and
+   * a single retry before giving up (the stored access token may have been
+   * invalidated server-side ahead of our clock).
    */
   private async metered<T>(
     essential: boolean,
     fn: () => Promise<{ body: T }>,
   ): Promise<T> {
+    return this.meteredAttempt(essential, fn, true);
+  }
+
+  private async meteredAttempt<T>(
+    essential: boolean,
+    fn: () => Promise<{ body: T }>,
+    allowAuthRetry: boolean,
+  ): Promise<T> {
     await assertBudget(this.tenantId, essential);
-    const res = await fn();
-    this._callsUsed += 1;
-    await bumpDailyCalls(this.tenantId, 1);
-    return res.body;
+    try {
+      const res = await fn();
+      this._callsUsed += 1;
+      await bumpDailyCalls(this.tenantId, 1);
+      return res.body;
+    } catch (raw) {
+      // The attempt still reached Xero and counts toward the daily budget.
+      this._callsUsed += 1;
+      await bumpDailyCalls(this.tenantId, 1);
+      const err = normalizeXeroError(raw);
+      if (err instanceof XeroAuthError && err.status === 401 && allowAuthRetry) {
+        await this.ensureFreshToken(true);
+        return this.meteredAttempt(essential, fn, false);
+      }
+      throw err;
+    }
   }
 
   /* ----------------------------- reads ----------------------------- */
 
-  /** Customers — GET /api.xro/2.0/Contacts (accounting.contacts.read). */
+  /** Customers - GET /api.xro/2.0/Contacts (accounting.contacts.read). */
   async getContacts(): Promise<Contact[]> {
     const out: Contact[] = [];
     for (let page = 1; ; page++) {
@@ -378,12 +643,12 @@ export class XeroGateway {
     return out;
   }
 
-  /** Revenue — GET /Invoices?where=Type=="ACCREC" (accounting.transactions.read). */
+  /** Revenue - GET /Invoices?where=Type=="ACCREC" (accounting.transactions.read). */
   async getAccrecInvoices(): Promise<Invoice[]> {
     return this.getInvoicesByType("ACCREC");
   }
 
-  /** Supplier costs — GET /Invoices?where=Type=="ACCPAY" (accounting.transactions.read). */
+  /** Supplier costs - GET /Invoices?where=Type=="ACCPAY" (accounting.transactions.read). */
   async getAccpayInvoices(): Promise<Invoice[]> {
     return this.getInvoicesByType("ACCPAY");
   }
@@ -406,7 +671,7 @@ export class XeroGateway {
           undefined, // includeArchived
           undefined, // createdByMyApp
           undefined, // unitdp
-          undefined, // summaryOnly
+          undefined, // summaryOnly (false -> line items are returned)
           PAGE_SIZE,
         ),
       );
@@ -417,7 +682,7 @@ export class XeroGateway {
     return out;
   }
 
-  /** Uncoded / bank spend — GET /BankTransactions (accounting.transactions.read). */
+  /** Uncoded / bank spend - GET /BankTransactions (accounting.transactions.read). */
   async getBankTransactions(): Promise<BankTransaction[]> {
     const out: BankTransaction[] = [];
     for (let page = 1; ; page++) {
@@ -439,7 +704,7 @@ export class XeroGateway {
     return out;
   }
 
-  /** Settlement reality — GET /Payments (accounting.transactions.read). */
+  /** Settlement reality - GET /Payments (accounting.transactions.read). */
   async getPayments(): Promise<Payment[]> {
     const out: Payment[] = [];
     for (let page = 1; ; page++) {
@@ -460,9 +725,10 @@ export class XeroGateway {
     return out;
   }
 
-  /** Native cost→customer link — GET /LinkedTransactions (accounting.transactions.read). */
+  /** Native cost→customer link - GET /LinkedTransactions (accounting.transactions.read). */
   async getLinkedTransactions(): Promise<LinkedTransaction[]> {
     const out: LinkedTransaction[] = [];
+    // LinkedTransactions paging is fixed at 100/page (no pageSize param).
     for (let page = 1; ; page++) {
       const body = await this.metered<LinkedTransactions>(true, () =>
         this.api.getLinkedTransactions(this.tenantId, page),
@@ -474,7 +740,7 @@ export class XeroGateway {
     return out;
   }
 
-  /** Products / services — GET /Items (accounting.settings.read). Not paged. */
+  /** Products / services - GET /Items (accounting.settings.read). Not paged. */
   async getItems(): Promise<Item[]> {
     const body = await this.metered<Items>(true, () =>
       this.api.getItems(this.tenantId),
@@ -482,16 +748,17 @@ export class XeroGateway {
     return body.items ?? [];
   }
 
-  /** Overhead context — GET /Reports/ProfitAndLoss (accounting.reports.read). */
+  /** Overhead context - GET /Reports/ProfitAndLoss (accounting.reports.read). */
   async getProfitAndLoss(fromDate?: string, toDate?: string): Promise<ReportWithRows> {
     return this.metered<ReportWithRows>(true, () =>
       this.api.getReportProfitAndLoss(this.tenantId, fromDate, toDate),
     );
   }
 
-  /** Guardrail baseline (stretch) — GET /Quotes (accounting.transactions.read). */
+  /** Guardrail baseline (stretch) - GET /Quotes (accounting.transactions.read). */
   async getQuotes(): Promise<Quote[]> {
     const out: Quote[] = [];
+    // Quotes paging is fixed at 100/page (no pageSize param).
     for (let page = 1; ; page++) {
       const body = await this.metered<Quotes>(true, () =>
         this.api.getQuotes(
@@ -513,11 +780,25 @@ export class XeroGateway {
     return out;
   }
 
+  /** Chart of accounts - GET /Accounts (accounting.settings.read). Used by the seed. */
+  async getAccounts(where?: string): Promise<SeedAccount[]> {
+    const body = await this.metered<Accounts>(true, () =>
+      this.api.getAccounts(this.tenantId, undefined, where),
+    );
+    return (body.accounts ?? []).map((a: Account) => ({
+      accountID: a.accountID,
+      code: a.code,
+      name: a.name,
+      type: a.type != null ? String(a.type) : undefined,
+      status: a.status != null ? String(a.status) : undefined,
+    }));
+  }
+
   /* ---------------------------- writes ----------------------------- *
    * Write-back (AD-6) uses these; only editable lines are ever re-tagged
    * and Shared Overhead is never written. The gateway just executes.      */
 
-  /** Create the per-customer tracking category — PUT /TrackingCategories (accounting.settings). */
+  /** Create the per-customer tracking category - PUT /TrackingCategories (accounting.settings). */
   async createTrackingCategory(name: string): Promise<TrackingCategory> {
     const body = await this.metered<TrackingCategories>(true, () =>
       this.api.createTrackingCategory(this.tenantId, { name }),
@@ -532,7 +813,7 @@ export class XeroGateway {
     return category;
   }
 
-  /** Add an option (one per customer) — POST /TrackingCategories/{id}/Options (accounting.settings). */
+  /** Add an option (one per customer) - POST /TrackingCategories/{id}/Options (accounting.settings). */
   async createTrackingOption(
     trackingCategoryID: string,
     name: string,
@@ -550,7 +831,7 @@ export class XeroGateway {
     return option;
   }
 
-  /** Re-tag an editable revenue invoice line — POST /Invoices (accounting.transactions). */
+  /** Re-tag an editable revenue invoice line - POST /Invoices (accounting.transactions). */
   async retagInvoice(invoiceID: string, invoice: Invoice): Promise<Invoice[]> {
     const body = await this.metered<Invoices>(true, () =>
       this.api.updateInvoice(this.tenantId, invoiceID, { invoices: [invoice] }),
@@ -558,7 +839,7 @@ export class XeroGateway {
     return body.invoices ?? [];
   }
 
-  /** Re-tag an editable cost bank-transaction line — POST /BankTransactions (accounting.transactions). */
+  /** Re-tag an editable cost bank-transaction line - POST /BankTransactions (accounting.transactions). */
   async retagBankTransaction(
     bankTransactionID: string,
     bankTransaction: BankTransaction,
@@ -569,5 +850,139 @@ export class XeroGateway {
       }),
     );
     return body.bankTransactions ?? [];
+  }
+
+  /* -------------------------- seed writes -------------------------- *
+   * Story 1.4 only. These create the demo org through the gateway so the
+   * seed script never touches xero-node (AD-2).                            */
+
+  /** Create a contact - POST /Contacts (accounting.contacts). */
+  async createContact(input: SeedContactInput): Promise<{ contactID: string; name: string }> {
+    const body = await this.metered<Contacts>(true, () =>
+      this.api.createContacts(this.tenantId, {
+        contacts: [{ name: input.name, ...(input.email ? { emailAddress: input.email } : {}) }],
+      }),
+    );
+    const contact = body.contacts?.[0];
+    if (!contact?.contactID) {
+      throw new XeroGatewayError("Xero returned no contact on create.", "XERO_SEED");
+    }
+    return { contactID: contact.contactID, name: contact.name ?? input.name };
+  }
+
+  /** Create an ACCREC/ACCPAY invoice - POST /Invoices (accounting.transactions). */
+  async createInvoice(input: SeedInvoiceInput): Promise<SeedCreatedDoc> {
+    const invoice: Invoice = {
+      type:
+        input.type === "ACCREC" ? Invoice.TypeEnum.ACCREC : Invoice.TypeEnum.ACCPAY,
+      contact: { contactID: input.contactID },
+      lineAmountTypes: LineAmountTypes.NoTax,
+      lineItems: toSeedLineItems(input.lineItems),
+      ...(input.reference ? { reference: input.reference } : {}),
+      ...(input.date ? { date: input.date } : {}),
+      ...(input.dueDate ? { dueDate: input.dueDate } : {}),
+      status:
+        input.status === "DRAFT"
+          ? Invoice.StatusEnum.DRAFT
+          : Invoice.StatusEnum.AUTHORISED,
+    };
+    const body = await this.metered<Invoices>(true, () =>
+      this.api.createInvoices(this.tenantId, { invoices: [invoice] }),
+    );
+    const created = body.invoices?.[0];
+    if (!created?.invoiceID) {
+      throw new XeroGatewayError("Xero returned no invoice on create.", "XERO_SEED");
+    }
+    return toSeedCreatedDoc({
+      id: created.invoiceID,
+      reference: created.reference,
+      total: created.total,
+      lineItems: created.lineItems,
+    });
+  }
+
+  /** Create a SPEND/RECEIVE bank transaction - POST /BankTransactions (accounting.transactions). */
+  async createBankTransaction(input: SeedBankTxnInput): Promise<SeedCreatedDoc> {
+    if (!input.bankAccountID && !input.bankAccountCode) {
+      throw new XeroGatewayError(
+        "createBankTransaction needs a bankAccountID or bankAccountCode (an account of type BANK).",
+        "XERO_SEED",
+      );
+    }
+    const txn: BankTransaction = {
+      type:
+        input.type === "SPEND"
+          ? BankTransaction.TypeEnum.SPEND
+          : BankTransaction.TypeEnum.RECEIVE,
+      bankAccount: input.bankAccountID
+        ? { accountID: input.bankAccountID }
+        : { code: input.bankAccountCode },
+      lineAmountTypes: LineAmountTypes.NoTax,
+      lineItems: toSeedLineItems(input.lineItems),
+      isReconciled: false, // stays editable/re-taggable (AD-6)
+      ...(input.contactID ? { contact: { contactID: input.contactID } } : {}),
+      ...(input.reference ? { reference: input.reference } : {}),
+      ...(input.date ? { date: input.date } : {}),
+    };
+    const body = await this.metered<BankTransactions>(true, () =>
+      this.api.createBankTransactions(this.tenantId, { bankTransactions: [txn] }),
+    );
+    const created = body.bankTransactions?.[0];
+    if (!created?.bankTransactionID) {
+      throw new XeroGatewayError(
+        "Xero returned no bank transaction on create.",
+        "XERO_SEED",
+      );
+    }
+    return toSeedCreatedDoc({
+      id: created.bankTransactionID,
+      reference: created.reference,
+      total: created.total,
+      lineItems: created.lineItems,
+    });
+  }
+
+  /** Create an item - POST /Items (accounting.settings). */
+  async createItem(code: string, name: string): Promise<{ itemID: string; code: string }> {
+    const body = await this.metered<Items>(true, () =>
+      this.api.createItems(this.tenantId, { items: [{ code, name }] }),
+    );
+    const item = body.items?.[0];
+    if (!item?.itemID) {
+      throw new XeroGatewayError("Xero returned no item on create.", "XERO_SEED");
+    }
+    return { itemID: item.itemID, code: item.code ?? code };
+  }
+
+  /**
+   * Create a LinkedTransaction (billable expense) - PUT /LinkedTransactions
+   * (accounting.transactions). This is the High-confidence native cost→customer
+   * signal (AD-5): a source purchase line linked to a customer and optionally to
+   * a target ACCREC invoice line.
+   */
+  async createLinkedTransaction(
+    input: SeedLinkInput,
+  ): Promise<{ linkedTransactionID: string }> {
+    const body = await this.metered<LinkedTransactions>(true, () =>
+      this.api.createLinkedTransaction(this.tenantId, {
+        sourceTransactionID: input.sourceTransactionID,
+        sourceLineItemID: input.sourceLineItemID,
+        contactID: input.contactID,
+        ...(input.targetTransactionID
+          ? { targetTransactionID: input.targetTransactionID }
+          : {}),
+        ...(input.targetLineItemID
+          ? { targetLineItemID: input.targetLineItemID }
+          : {}),
+      }),
+    );
+    const link = body.linkedTransactions?.[0];
+    if (!link?.linkedTransactionID) {
+      throw new XeroGatewayError(
+        "Xero returned no linked transaction on create.",
+        "XERO_SEED",
+      );
+    }
+    return { linkedTransactionID: link.linkedTransactionID };
   }
 }
