@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  RiCheckLine,
-  RiFileCopyLine,
-  RiMailSendLine,
-  RiRefreshLine,
-} from "@remixicon/react"
+  Copy01Icon,
+  MailSend01Icon,
+  RefreshIcon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/tremor/Button"
 import { cx } from "@/components/tremor/utils"
@@ -38,15 +39,15 @@ export function DraftedFixPanel({
   }
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 dark:border-blue-900/60 dark:bg-blue-950/30">
+    <div className="rounded-xl border border-brand-green/25 bg-brand-green/5 p-4 dark:border-brand-green/25 dark:bg-brand-green/10">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
-            <RiMailSendLine className="size-4" aria-hidden />
+          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-green/15 text-brand-green dark:bg-brand-green/20 dark:text-brand-green">
+            <HugeiconsIcon icon={MailSend01Icon} className="size-4" aria-hidden />
           </span>
           <div>
             <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-              Drafted fix — a repricing note to {customerName}
+              Drafted fix: a repricing note to {customerName}
             </h4>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Editable, built from real numbers. Nothing is ever sent for you.
@@ -63,8 +64,8 @@ export function DraftedFixPanel({
         aria-label={`Repricing email to ${customerName}`}
         className={cx(
           "mt-3 w-full resize-y rounded-lg border bg-white p-3 text-sm leading-relaxed text-gray-800 shadow-xs",
-          "border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200",
-          "dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:focus:ring-blue-900/40",
+          "border-gray-200 focus:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/25",
+          "dark:border-white/10 dark:bg-ink dark:text-gray-100 dark:focus:ring-brand-green/35",
         )}
       />
 
@@ -76,7 +77,7 @@ export function DraftedFixPanel({
               onClick={() => setText(draft)}
               className="inline-flex items-center gap-1 font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
             >
-              <RiRefreshLine className="size-3.5" aria-hidden />
+              <HugeiconsIcon icon={RefreshIcon} className="size-3.5" aria-hidden />
               Reset to draft
             </button>
           )}
@@ -87,17 +88,17 @@ export function DraftedFixPanel({
           className={cx(
             "gap-1.5",
             copied &&
-              "bg-emerald-600 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-600",
+              "bg-brand-green hover:bg-brand-green dark:bg-brand-green dark:hover:bg-brand-green",
           )}
         >
           {copied ? (
             <>
-              <RiCheckLine className="size-4" aria-hidden />
+              <HugeiconsIcon icon={Tick01Icon} className="size-4" aria-hidden />
               Copied
             </>
           ) : (
             <>
-              <RiFileCopyLine className="size-4" aria-hidden />
+              <HugeiconsIcon icon={Copy01Icon} className="size-4" aria-hidden />
               Copy email
             </>
           )}

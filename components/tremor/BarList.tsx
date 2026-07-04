@@ -81,9 +81,9 @@ function BarListInner<T>(
               className={cx(
                 "flex items-center rounded-sm transition-all",
                 rowHeight,
-                "bg-blue-200 dark:bg-blue-900",
+                "bg-brand-green/20 dark:bg-brand-green/25",
                 onValueChange
-                  ? "group-hover:bg-blue-300 dark:group-hover:bg-blue-800"
+                  ? "group-hover:bg-brand-green/30 dark:group-hover:bg-brand-green/35"
                   : "",
                 {
                   "mb-0": index === sortedData.length - 1,

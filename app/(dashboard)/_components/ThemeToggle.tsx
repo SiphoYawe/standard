@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { RiMoonClearLine, RiSunLine } from "@remixicon/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons"
 import { useTheme } from "next-themes"
 
 import { cx } from "@/components/tremor/utils"
@@ -22,14 +23,14 @@ export function ThemeToggle() {
       className={cx(
         "inline-flex size-9 items-center justify-center rounded-full border transition-colors",
         "border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
-        "dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800",
-        "outline-blue-500 focus-visible:outline-2",
+        "dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10",
+        "outline-brand-green focus-visible:outline-2",
       )}
     >
       {mounted && isDark ? (
-        <RiSunLine className="size-4" aria-hidden />
+        <HugeiconsIcon icon={Sun03Icon} className="size-4" aria-hidden />
       ) : (
-        <RiMoonClearLine className="size-4" aria-hidden />
+        <HugeiconsIcon icon={Moon02Icon} className="size-4" aria-hidden />
       )}
     </button>
   )

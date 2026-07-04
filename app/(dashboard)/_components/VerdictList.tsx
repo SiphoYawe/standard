@@ -1,6 +1,8 @@
 "use client"
 
-import { RiArrowRightSLine, RiErrorWarningLine } from "@remixicon/react"
+import { ChevronRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/tremor/Badge"
 import {
@@ -35,7 +37,7 @@ export function VerdictList({
   const ranked = rankWorstFirst(customers)
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-900 dark:bg-[#090E1A]">
+    <section className="rounded-lg border border-gray-200 bg-white shadow-xs dark:border-white/10 dark:bg-brand-dark">
       <div className="flex flex-col gap-1 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
         <div>
           <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50">
@@ -85,8 +87,8 @@ export function VerdictList({
                   }}
                   className={cx(
                     "group cursor-pointer transition-colors",
-                    "hover:bg-gray-50 dark:hover:bg-gray-900/50",
-                    "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500",
+                    "hover:bg-gray-50 dark:hover:bg-white/5",
+                    "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-green",
                   )}
                 >
                   {/* rank + status accent */}
@@ -95,7 +97,9 @@ export function VerdictList({
                       <span
                         className={cx(
                           "h-8 w-1 rounded-full",
-                          negative ? "bg-red-500" : "bg-emerald-500",
+                          negative
+                            ? "bg-brand-dark dark:bg-brand-mid"
+                            : "bg-brand-green",
                         )}
                         aria-hidden
                       />
@@ -118,8 +122,12 @@ export function VerdictList({
                       )}
                       <Badge variant={conf.variant}>{conf.label}</Badge>
                       {c.lowConfidenceCount > 0 && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-500">
-                          <RiErrorWarningLine className="size-3.5" aria-hidden />
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-mid dark:text-brand-green">
+                          <HugeiconsIcon
+                            icon={AlertCircleIcon}
+                            className="size-3.5"
+                            aria-hidden
+                          />
                           {c.lowConfidenceCount} to check
                         </span>
                       )}
@@ -137,7 +145,7 @@ export function VerdictList({
                     className={cx(
                       "text-right tabular-nums",
                       negative
-                        ? "text-red-600 dark:text-red-500"
+                        ? "text-brand-dark dark:text-gray-300"
                         : "text-gray-700 dark:text-gray-300",
                     )}
                   >
@@ -148,15 +156,15 @@ export function VerdictList({
                     className={cx(
                       "text-right text-sm font-semibold tabular-nums",
                       negative
-                        ? "text-red-600 dark:text-red-500"
-                        : "text-emerald-600 dark:text-emerald-500",
+                        ? "text-brand-dark dark:text-gray-100"
+                        : "text-brand-green",
                     )}
                   >
                     {signedMoney(c.trueMargin, currency)}
                   </TableCell>
 
                   <TableCell className="text-right">
-                    <RiArrowRightSLine
+                    <ChevronRight
                       className="size-5 text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-gray-500 dark:text-gray-600"
                       aria-hidden
                     />

@@ -8,24 +8,24 @@ export function cx(...args: ClassValue[]) {
   return twMerge(clsx(...args))
 }
 
-// Tremor focusRing [v0.0.1]
+// Tremor focusRing [v0.0.1] - Standard brand green
 export const focusRing = [
   "outline outline-offset-2 outline-0 focus-visible:outline-2",
-  "outline-blue-500 dark:outline-blue-500",
+  "outline-brand-green dark:outline-brand-green",
 ]
 
-// Tremor focusInput [v0.0.2]
+// Tremor focusInput [v0.0.2] - Standard brand green
 export const focusInput = [
   "focus:ring-2",
-  "focus:ring-blue-200 dark:focus:ring-blue-700/30",
-  "focus:border-blue-500 dark:focus:border-blue-700",
+  "focus:ring-brand-green/30 dark:focus:ring-brand-green/40",
+  "focus:border-brand-green dark:focus:border-brand-green",
 ]
 
-// Tremor hasErrorInput [v0.0.1]
+// Tremor hasErrorInput [v0.0.1] - negatives use dark teal, never red
 export const hasErrorInput = [
   "ring-2",
-  "border-red-500 dark:border-red-700",
-  "ring-red-200 dark:ring-red-700/30",
+  "border-brand-dark dark:border-brand-mid",
+  "ring-brand-dark/20 dark:ring-brand-mid/30",
 ]
 
 // Tremor getYAxisDomain [v0.0.0]
@@ -39,69 +39,58 @@ export const getYAxisDomain = (
   return [minDomain, maxDomain]
 }
 
-// Tremor chartColors [v0.1.0]
+// Tremor chartColors [v0.1.0] - Standard brand palette only.
+// Every key maps to one of the three brand hues (green / mid / dark). Series
+// whose light-mode tone is dark teal carry a dark-mode variant so they stay
+// readable on the dark-teal card surface.
 export type ColorUtility = "bg" | "stroke" | "fill" | "text"
 
 export const chartColors = {
-  blue: {
-    bg: "bg-blue-500",
-    stroke: "stroke-blue-500",
-    fill: "fill-blue-500",
-    text: "text-blue-500",
+  // Healthy / positive / revenue
+  green: {
+    bg: "bg-brand-green",
+    stroke: "stroke-brand-green",
+    fill: "fill-brand-green",
+    text: "text-brand-green",
   },
-  emerald: {
-    bg: "bg-emerald-500",
-    stroke: "stroke-emerald-500",
-    fill: "fill-emerald-500",
-    text: "text-emerald-500",
+  // Secondary
+  mid: {
+    bg: "bg-brand-mid",
+    stroke: "stroke-brand-mid",
+    fill: "fill-brand-mid",
+    text: "text-brand-mid",
   },
-  violet: {
-    bg: "bg-violet-500",
-    stroke: "stroke-violet-500",
-    fill: "fill-violet-500",
-    text: "text-violet-500",
+  // Loss / cost / negative - dark teal on light, lifted to mid on dark surfaces
+  dark: {
+    bg: "bg-brand-dark dark:bg-brand-mid",
+    stroke: "stroke-brand-dark dark:stroke-brand-mid",
+    fill: "fill-brand-dark dark:fill-brand-mid",
+    text: "text-brand-dark dark:text-brand-mid",
   },
-  amber: {
-    bg: "bg-amber-500",
-    stroke: "stroke-amber-500",
-    fill: "fill-amber-500",
-    text: "text-amber-500",
+  // Donut slices (all profitable accounts) - three distinct on-brand tones
+  slice1: {
+    bg: "bg-brand-green",
+    stroke: "stroke-brand-green",
+    fill: "fill-brand-green",
+    text: "text-brand-green",
+  },
+  slice2: {
+    bg: "bg-brand-mid",
+    stroke: "stroke-brand-mid",
+    fill: "fill-brand-mid",
+    text: "text-brand-mid",
+  },
+  slice3: {
+    bg: "bg-brand-dark dark:bg-brand-green/45",
+    stroke: "stroke-brand-dark dark:stroke-brand-green/45",
+    fill: "fill-brand-dark dark:fill-brand-green/45",
+    text: "text-brand-dark dark:text-brand-green",
   },
   gray: {
-    bg: "bg-gray-500",
-    stroke: "stroke-gray-500",
-    fill: "fill-gray-500",
-    text: "text-gray-500",
-  },
-  cyan: {
-    bg: "bg-cyan-500",
-    stroke: "stroke-cyan-500",
-    fill: "fill-cyan-500",
-    text: "text-cyan-500",
-  },
-  pink: {
-    bg: "bg-pink-500",
-    stroke: "stroke-pink-500",
-    fill: "fill-pink-500",
-    text: "text-pink-500",
-  },
-  red: {
-    bg: "bg-red-500",
-    stroke: "stroke-red-500",
-    fill: "fill-red-500",
-    text: "text-red-500",
-  },
-  sky: {
-    bg: "bg-sky-500",
-    stroke: "stroke-sky-500",
-    fill: "fill-sky-500",
-    text: "text-sky-500",
-  },
-  indigo: {
-    bg: "bg-indigo-500",
-    stroke: "stroke-indigo-500",
-    fill: "fill-indigo-500",
-    text: "text-indigo-500",
+    bg: "bg-gray-400",
+    stroke: "stroke-gray-400",
+    fill: "fill-gray-400",
+    text: "text-gray-400",
   },
 } as const satisfies {
   [color: string]: {

@@ -5,8 +5,20 @@
 
 @theme {
   --font-sans:
-    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
+    var(--font-red-hat-display), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Standard brand palette. These three hues are the ONLY chromatic colors in
+     the product. Everything else is a neutral (white / grey / near-black).
+     Emphasis on negatives is expressed with weight and opacity of brand-dark,
+     never with red. */
+  --color-brand-green: #08a045; /* primary, positive, healthy */
+  --color-brand-mid: #0b6e4f; /* secondary */
+  --color-brand-dark: #073b3a; /* dark surfaces AND the negative / loss tone */
+
+  /* Near-black neutral for the dark-mode page backdrop, faintly teal so the
+     brand-dark card surfaces read as lifted above it. Treated as a neutral. */
+  --color-ink: #05201e;
 
   --animate-slide-down-and-fade: slideDownAndFade 150ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-slide-up-and-fade: slideUpAndFade 150ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -70,7 +82,7 @@ html {
 
 body {
   @apply antialiased;
-  @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-50;
+  @apply bg-gray-50 text-gray-900 dark:bg-ink dark:text-gray-50;
   color-scheme: light dark;
 }
 

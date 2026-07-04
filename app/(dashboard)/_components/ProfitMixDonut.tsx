@@ -10,14 +10,7 @@ import {
 import type { CustomerMargin } from "@/lib/contracts/verdict"
 import { money, percent } from "./format"
 
-const palette: AvailableChartColorsKeys[] = [
-  "blue",
-  "emerald",
-  "cyan",
-  "indigo",
-  "sky",
-  "violet",
-]
+const palette: AvailableChartColorsKeys[] = ["slice1", "slice2", "slice3"]
 
 export function ProfitMixDonut({
   customers,
@@ -89,9 +82,9 @@ export function ProfitMixDonut({
       </div>
 
       {lost > 0 && (
-        <p className="mt-4 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
+        <p className="mt-4 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-white/10 dark:text-gray-400">
           Before{" "}
-          <span className="font-semibold text-red-600 dark:text-red-500">
+          <span className="font-semibold text-brand-dark dark:text-gray-100">
             {money(lost, currency)}
           </span>{" "}
           drained by {loserCount} money-losing{" "}

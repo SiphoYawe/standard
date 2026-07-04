@@ -25,8 +25,8 @@ export function MarginRankingChart({
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-          <Legend className="bg-red-500" label="Losing" />
-          <Legend className="bg-emerald-500" label="Profit" />
+          <Legend className="bg-brand-dark dark:bg-brand-mid" label="Losing" />
+          <Legend className="bg-brand-green" label="Profit" />
         </div>
       </div>
 
@@ -39,17 +39,17 @@ export function MarginRankingChart({
               <div className="w-20 shrink-0 truncate text-sm font-medium text-gray-700 sm:w-28 dark:text-gray-300">
                 {c.customerName}
               </div>
-              <div className="relative h-7 flex-1 rounded bg-gray-50 dark:bg-gray-900/50">
+              <div className="relative h-7 flex-1 rounded bg-gray-100 dark:bg-white/5">
                 <div
-                  className="absolute inset-y-0 left-1/2 w-px bg-gray-300 dark:bg-gray-700"
+                  className="absolute inset-y-0 left-1/2 w-px bg-gray-300 dark:bg-white/15"
                   aria-hidden
                 />
                 <div
                   className={cx(
                     "absolute inset-y-1 rounded transition-[width] duration-700 ease-out",
                     negative
-                      ? "right-1/2 bg-red-500 dark:bg-red-500/90"
-                      : "left-1/2 bg-emerald-500 dark:bg-emerald-500/90",
+                      ? "right-1/2 bg-brand-dark dark:bg-brand-mid"
+                      : "left-1/2 bg-brand-green",
                   )}
                   style={{ width: `${ratio * 50}%` }}
                 />
@@ -58,8 +58,8 @@ export function MarginRankingChart({
                 className={cx(
                   "w-20 shrink-0 text-right text-sm font-semibold tabular-nums",
                   negative
-                    ? "text-red-600 dark:text-red-500"
-                    : "text-emerald-600 dark:text-emerald-500",
+                    ? "text-brand-dark dark:text-gray-300"
+                    : "text-brand-green",
                 )}
               >
                 {signedMoney(c.trueMargin, currency)}
