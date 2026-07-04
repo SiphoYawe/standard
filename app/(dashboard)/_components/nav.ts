@@ -1,31 +1,31 @@
 import {
-  RiFocus3Line,
-  RiGroupLine,
-  RiHome2Line,
-  RiListCheck2,
-  RiPieChart2Line,
-  RiSettings3Line,
-} from "@remixicon/react"
-import type { RemixiconComponentType } from "@remixicon/react"
+  CheckListIcon,
+  Home01Icon,
+  PieChartIcon,
+  Settings02Icon,
+  Target01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
 
 export type NavItem = {
   name: string
   href: string
-  icon: RemixiconComponentType
+  icon: IconSvgElement
   /** Only the current page is active in this single-route demo. */
   active?: boolean
 }
 
-/** Primary navigation — mirrors the Tremor dashboard template's Sidebar. */
+/** Primary navigation - mirrors the Tremor dashboard template's Sidebar. */
 export const navigation: NavItem[] = [
-  { name: "Overview", href: "#top", icon: RiHome2Line, active: true },
-  { name: "Customers", href: "#customers", icon: RiGroupLine },
-  { name: "Settings", href: "#settings", icon: RiSettings3Line },
+  { name: "Overview", href: "#top", icon: Home01Icon, active: true },
+  { name: "Customers", href: "#customers", icon: UserGroupIcon },
+  { name: "Settings", href: "#settings", icon: Settings02Icon },
 ]
 
-/** In-page shortcuts — the template's "Shortcuts" block, made functional. */
+/** In-page shortcuts - the template's "Shortcuts" block, made functional. */
 export const shortcuts: NavItem[] = [
-  { name: "The money-loser", href: "#reveal", icon: RiFocus3Line },
-  { name: "Margin ranking", href: "#margins", icon: RiPieChart2Line },
-  { name: "Every customer", href: "#customers", icon: RiListCheck2 },
+  { name: "The money-loser", href: "#reveal", icon: Target01Icon },
+  { name: "Margin ranking", href: "#margins", icon: PieChartIcon },
+  { name: "Every customer", href: "#customers", icon: CheckListIcon },
 ]

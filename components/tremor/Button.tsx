@@ -1,7 +1,8 @@
-// Tremor Button [v1.0.0] — Slot dependency removed (no @radix-ui in this project).
+// Tremor Button [v1.0.0] - Slot dependency removed (no @radix-ui in this project).
 
 import React from "react"
-import { RiLoader2Fill } from "@remixicon/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon } from "@hugeicons/core-free-icons"
 import { tv, type VariantProps } from "tailwind-variants"
 
 import { cx, focusRing } from "./utils"
@@ -17,10 +18,10 @@ const buttonVariants = tv({
       primary: [
         "border-transparent",
         "text-white dark:text-white",
-        "bg-blue-500 dark:bg-blue-500",
-        "hover:bg-blue-600 dark:hover:bg-blue-600",
-        "disabled:bg-blue-300 disabled:text-white",
-        "dark:disabled:bg-blue-800 dark:disabled:text-blue-400",
+        "bg-brand-green dark:bg-brand-green",
+        "hover:bg-brand-green/90 dark:hover:bg-brand-green/90",
+        "disabled:bg-brand-green/50 disabled:text-white",
+        "dark:disabled:bg-brand-green/40 dark:disabled:text-white/70",
       ],
       secondary: [
         "border-gray-300 dark:border-gray-800",
@@ -50,10 +51,10 @@ const buttonVariants = tv({
       destructive: [
         "text-white",
         "border-transparent",
-        "bg-red-600 dark:bg-red-700",
-        "hover:bg-red-700 dark:hover:bg-red-600",
-        "disabled:bg-red-300 disabled:text-white",
-        "dark:disabled:bg-red-950 dark:disabled:text-red-400",
+        "bg-brand-dark dark:bg-brand-dark",
+        "hover:bg-brand-dark/90 dark:hover:bg-brand-dark/80",
+        "disabled:bg-brand-dark/40 disabled:text-white",
+        "dark:disabled:bg-brand-dark/50 dark:disabled:text-white/70",
       ],
     },
   },
@@ -92,7 +93,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <span className="pointer-events-none flex shrink-0 items-center justify-center gap-1.5">
-            <RiLoader2Fill
+            <HugeiconsIcon
+              icon={Loading03Icon}
               className="size-4 shrink-0 animate-spin"
               aria-hidden="true"
             />

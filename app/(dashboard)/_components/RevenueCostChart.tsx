@@ -37,14 +37,14 @@ export function RevenueCostChart({
         data={data}
         index="name"
         categories={["Revenue", "Attributed cost"]}
-        colors={["blue", "amber"]}
+        colors={["green", "dark"]}
         valueFormatter={(v) => compactMoney(v, currency)}
         yAxisWidth={52}
         barCategoryGap="20%"
         customTooltip={({ active, payload, label }) => {
           if (!active || !payload?.length) return null
           return (
-            <div className="rounded-md border border-gray-200 bg-white text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
+            <div className="rounded-md border border-gray-200 bg-white text-sm shadow-md dark:border-white/10 dark:bg-brand-dark">
               <div className="border-b border-inherit px-3 py-2 font-medium text-gray-900 dark:text-gray-50">
                 {label}
               </div>
@@ -58,8 +58,8 @@ export function RevenueCostChart({
                       <span
                         className={
                           p.category === "Revenue"
-                            ? "size-2 rounded-xs bg-blue-500"
-                            : "size-2 rounded-xs bg-amber-500"
+                            ? "size-2 rounded-xs bg-brand-green"
+                            : "size-2 rounded-xs bg-brand-dark dark:bg-brand-mid"
                         }
                       />
                       {p.category}

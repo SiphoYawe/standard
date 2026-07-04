@@ -11,25 +11,30 @@ const badgeVariants = tv({
   ),
   variants: {
     variant: {
+      // Informational / medium confidence
       default: [
-        "bg-blue-50 text-blue-900 ring-blue-500/30",
-        "dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30",
+        "bg-gray-100 text-gray-700 ring-gray-500/20",
+        "dark:bg-gray-500/15 dark:text-gray-300 dark:ring-gray-400/20",
       ],
+      // Quiet neutral
       neutral: [
-        "bg-gray-50 text-gray-900 ring-gray-500/30",
-        "dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20",
+        "bg-gray-50 text-gray-600 ring-gray-500/20",
+        "dark:bg-white/5 dark:text-gray-400 dark:ring-white/10",
       ],
+      // Positive / healthy / confident
       success: [
-        "bg-emerald-50 text-emerald-900 ring-emerald-600/30",
-        "dark:bg-emerald-400/10 dark:text-emerald-400 dark:ring-emerald-400/20",
+        "bg-brand-green/10 text-brand-green ring-brand-green/25",
+        "dark:bg-brand-green/15 dark:text-brand-green dark:ring-brand-green/30",
       ],
+      // Loss / costing you - dark teal, never red
       error: [
-        "bg-red-50 text-red-900 ring-red-600/20",
-        "dark:bg-red-400/10 dark:text-red-400 dark:ring-red-400/20",
+        "bg-brand-dark/10 text-brand-dark ring-brand-dark/25",
+        "dark:bg-brand-dark/60 dark:text-gray-50 dark:ring-brand-green/35",
       ],
+      // Caution / watch / needs a check
       warning: [
-        "bg-yellow-50 text-yellow-900 ring-yellow-600/30",
-        "dark:bg-yellow-400/10 dark:text-yellow-500 dark:ring-yellow-400/20",
+        "bg-brand-mid/10 text-brand-mid ring-brand-mid/25",
+        "dark:bg-brand-mid/20 dark:text-brand-green dark:ring-brand-mid/30",
       ],
     },
   },

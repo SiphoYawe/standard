@@ -1,18 +1,18 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Red_Hat_Display } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "./theme-provider"
 
-const inter = Inter({
+const redHatDisplay = Red_Hat_Display({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-red-hat-display",
 })
 
 export const metadata: Metadata = {
-  title: "Standard — the profit truth on every customer",
+  title: "Standard: the real margin on every customer",
   description:
-    "Standard reveals the real margin on every customer, traces every number to its Xero source, and drafts the fix. Built on the Tremor dashboard.",
+    "Standard reveals the real margin on every customer, traces every number to its Xero source, and drafts the fix.",
 }
 
 export default function RootLayout({
@@ -21,7 +21,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${redHatDisplay.variable} h-full`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full font-sans" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"

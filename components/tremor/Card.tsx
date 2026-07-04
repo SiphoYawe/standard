@@ -1,4 +1,4 @@
-// Tremor Card [v1.0.0] — Slot dependency removed (no @radix-ui in this project).
+// Tremor Card [v1.0.0] - Slot dependency removed (no @radix-ui in this project).
 
 import React from "react"
 
@@ -14,10 +14,10 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         className={cx(
           // base
           "relative w-full rounded-lg border p-6 text-left shadow-xs",
-          // background color
-          "bg-white dark:bg-[#090E1A]",
+          // background color - dark-teal card surface, lifted above the ink page
+          "bg-white dark:bg-brand-dark",
           // border color
-          "border-gray-200 dark:border-gray-900",
+          "border-gray-200 dark:border-white/10",
           className,
         )}
         tremor-id="tremor-raw"

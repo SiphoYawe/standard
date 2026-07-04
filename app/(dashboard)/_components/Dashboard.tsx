@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { RiSparkling2Line } from "@remixicon/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/tremor/Badge"
 import type { Verdict } from "@/lib/contracts/verdict"
@@ -29,7 +30,7 @@ export function Dashboard({ verdict }: { verdict: Verdict }) {
 
   return (
     <div className="w-full" id="top">
-      {/* Page header — mirrors the Tremor overview page section header */}
+      {/* Page header - mirrors the Tremor overview page section header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg font-semibold text-gray-900 sm:text-xl dark:text-gray-50">
@@ -40,14 +41,14 @@ export function Dashboard({ verdict }: { verdict: Verdict }) {
           </p>
         </div>
         <Badge variant="success" className="w-fit gap-1.5 px-2.5 py-1">
-          <RiSparkling2Line className="size-4" aria-hidden />
+          <HugeiconsIcon icon={SparklesIcon} className="size-4" aria-hidden />
           {money(verdict.kpis.hiddenLossesUncovered, verdict.baseCurrency)} in
           hidden losses found
         </Badge>
       </div>
 
       <div className="mt-6 space-y-6 sm:mt-8">
-        {/* The reveal — visual anchor near the top */}
+        {/* The reveal - visual anchor near the top */}
         {worst?.isMoneyLoser && (
           <div id="reveal" className="scroll-mt-20">
             <HeadlineBanner customer={worst} onOpen={setSelectedId} />
@@ -61,7 +62,7 @@ export function Dashboard({ verdict }: { verdict: Verdict }) {
           currency={verdict.baseCurrency}
         />
 
-        {/* Chart cards — responsive grid, overview-page rhythm */}
+        {/* Chart cards - responsive grid, overview-page rhythm */}
         <div
           id="margins"
           className="grid scroll-mt-20 grid-cols-1 gap-6 lg:grid-cols-3"

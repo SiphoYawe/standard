@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  RiCloseLine,
-  RiEdit2Line,
-  RiErrorWarningFill,
-  RiPushpinLine,
-} from "@remixicon/react"
+  AlertCircleIcon,
+  Cancel01Icon,
+  Edit02Icon,
+  PinIcon,
+} from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/tremor/Badge"
 import { BarList } from "@/components/tremor/BarList"
@@ -62,23 +63,23 @@ export function CustomerDrawer({
     <div className="fixed inset-0 z-50">
       {/* overlay */}
       <div
-        className="animate-overlay-show absolute inset-0 bg-gray-950/40 backdrop-blur-[2px]"
+        className="animate-overlay-show absolute inset-0 bg-brand-dark/50 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden
       />
 
-      {/* panel — Tremor Drawer styling (floating, inset, rounded) */}
+      {/* panel - Tremor Drawer styling (floating, inset, rounded) */}
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={`${customer.customerName} — cost trace`}
+        aria-label={`${customer.customerName} cost trace`}
         className={cx(
           "animate-drawer-slide-left-and-fade absolute inset-y-2 right-2 flex w-[95vw] max-w-lg flex-col overflow-hidden rounded-md border shadow-lg max-sm:inset-x-2",
-          "border-gray-200 bg-white dark:border-gray-900 dark:bg-[#090E1A]",
+          "border-gray-200 bg-white dark:border-white/10 dark:bg-brand-dark",
         )}
       >
         {/* header */}
-        <header className="flex items-start justify-between gap-4 border-b border-gray-200 p-5 dark:border-gray-800">
+        <header className="flex items-start justify-between gap-4 border-b border-gray-200 p-5 dark:border-white/10">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">
@@ -99,16 +100,16 @@ export function CustomerDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-gray-200"
           >
-            <RiCloseLine className="size-5" aria-hidden />
+            <HugeiconsIcon icon={Cancel01Icon} className="size-5" aria-hidden />
           </button>
         </header>
 
         {/* scroll body */}
         <div className="flex-1 space-y-6 overflow-y-auto p-5">
           {/* margin ledger */}
-          <section className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+          <section className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
             <BreakdownRow
               label="Revenue invoiced"
               value={money(customer.revenue, customer.currency)}
@@ -130,7 +131,7 @@ export function CustomerDrawer({
                 muted
               />
             )}
-            <div className="flex items-center justify-between bg-gray-50 px-4 py-3 dark:bg-gray-900/40">
+            <div className="flex items-center justify-between bg-gray-50 px-4 py-3 dark:bg-white/5">
               <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
                 True margin
               </span>
@@ -139,8 +140,8 @@ export function CustomerDrawer({
                   className={cx(
                     "block text-lg font-semibold tabular-nums",
                     customer.trueMargin < 0
-                      ? "text-red-600 dark:text-red-500"
-                      : "text-emerald-600 dark:text-emerald-500",
+                      ? "text-brand-dark dark:text-gray-100"
+                      : "text-brand-green",
                   )}
                 >
                   {signedMoney(customer.trueMargin, customer.currency)}
@@ -176,22 +177,20 @@ export function CustomerDrawer({
           <section>
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                The receipts — every number traced to Xero
+                The receipts: every number traced to Xero
               </h3>
               <span className="text-xs text-gray-400 dark:text-gray-500">
                 {customer.allocations.length} allocations
               </span>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <b className="font-medium text-emerald-600 dark:text-emerald-500">
-                Confident
-              </b>{" "}
-              = native Xero link ·{" "}
-              <b className="font-medium text-blue-600 dark:text-blue-500">
+              <b className="font-medium text-brand-green">Confident</b> = native
+              Xero link ·{" "}
+              <b className="font-medium text-gray-700 dark:text-gray-200">
                 Fairly sure
               </b>{" "}
               = matched by description ·{" "}
-              <b className="font-medium text-amber-600 dark:text-amber-500">
+              <b className="font-medium text-brand-mid dark:text-brand-green">
                 Needs your check
               </b>{" "}
               = inferred
@@ -227,7 +226,7 @@ function BreakdownRow({
   muted?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5 dark:border-gray-800/70">
+    <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5 dark:border-white/5">
       <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
       <span
         className={cx(
@@ -252,8 +251,8 @@ function AllocationCard({ allocation }: { allocation: Allocation }) {
       className={cx(
         "rounded-xl border p-4",
         conf.flagged
-          ? "border-amber-300 bg-amber-50/50 dark:border-amber-800/70 dark:bg-amber-950/20"
-          : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40",
+          ? "border-brand-mid/40 bg-brand-mid/5 dark:border-brand-mid/40 dark:bg-brand-mid/10"
+          : "border-gray-200 bg-white dark:border-white/10 dark:bg-white/5",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -262,8 +261,12 @@ function AllocationCard({ allocation }: { allocation: Allocation }) {
             <Badge variant={kindVariant}>{kindLabel(allocation.kind)}</Badge>
             <Badge variant={conf.variant}>{conf.label}</Badge>
             {conf.flagged && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-500">
-                <RiErrorWarningFill className="size-3.5" aria-hidden />
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-mid dark:text-brand-green">
+                <HugeiconsIcon
+                  icon={AlertCircleIcon}
+                  className="size-3.5"
+                  aria-hidden
+                />
                 Flag for review
               </span>
             )}
@@ -287,31 +290,39 @@ function AllocationCard({ allocation }: { allocation: Allocation }) {
         </div>
       </div>
 
-      <div className="mt-3 space-y-2 border-t border-gray-100 pt-3 dark:border-gray-800">
+      <div className="mt-3 space-y-2 border-t border-gray-100 pt-3 dark:border-white/10">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
           Traced to Xero
         </p>
         {allocation.sources.map((s, i) => (
           <div
             key={`${s.xeroId}-${i}`}
-            className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-900/60"
+            className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/5"
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
                   {sourceTypeLabel(s.type)}
                 </span>
-                <code className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-[11px] text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                <code className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-[11px] text-gray-600 dark:bg-white/10 dark:text-gray-300">
                   {s.xeroId}
                 </code>
                 {s.editable ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 dark:text-blue-400">
-                    <RiEdit2Line className="size-3" aria-hidden />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-green">
+                    <HugeiconsIcon
+                      icon={Edit02Icon}
+                      className="size-3"
+                      aria-hidden
+                    />
                     Re-taggable
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400 dark:text-gray-500">
-                    <RiPushpinLine className="size-3" aria-hidden />
+                    <HugeiconsIcon
+                      icon={PinIcon}
+                      className="size-3"
+                      aria-hidden
+                    />
                     Locked
                   </span>
                 )}
