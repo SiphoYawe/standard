@@ -7,17 +7,12 @@ import { MobileSidebar } from "./MobileSidebar"
 import { ThemeToggle } from "./ThemeToggle"
 import { navigation, shortcuts } from "./nav"
 
-/** The org / workspace the verdict belongs to. */
-const WORKSPACE = {
-  name: "Dave's Plumbing Ltd",
-  role: "Owner workspace",
-  initials: "DP",
-}
-
-const OWNER = {
-  name: "Dave Nolan",
-  email: "dave@davesplumbing.co.uk",
-  initials: "DN",
+/** Up-to-two-letter initials from the connected organisation name. */
+function initialsFrom(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "ORG"
+  const letters = parts.slice(0, 2).map((p) => p[0]!.toUpperCase())
+  return letters.join("")
 }
 
 /** Standard logo lockup: light mark on light surfaces, all-green on dark teal. */
@@ -46,8 +41,11 @@ function BrandMark() {
   )
 }
 
-/** The workspace indicator, styled like the template's workspace switcher. */
-function WorkspaceCard() {
+/**
+ * The connected-organisation indicator, styled like the template's workspace
+ * switcher. Shows the real Xero org name from the Verdict - never a placeholder.
+ */
+function WorkspaceCard({ tenantName }: { tenantName: string }) {
   return (
     <div
       className={cx(
@@ -59,15 +57,15 @@ function WorkspaceCard() {
         className="flex aspect-square size-8 items-center justify-center rounded bg-brand-green p-2 text-xs font-medium text-white"
         aria-hidden
       >
-        {WORKSPACE.initials}
+        {initialsFrom(tenantName)}
       </span>
       <div className="flex w-full items-center justify-between gap-x-3 truncate">
         <div className="truncate">
           <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">
-            {WORKSPACE.name}
+            {tenantName}
           </p>
           <p className="truncate text-left text-xs text-gray-500 dark:text-gray-400">
-            {WORKSPACE.role}
+            Xero organisation
           </p>
         </div>
         <ChevronsUpDown
@@ -138,23 +136,20 @@ function NavSection() {
   )
 }
 
-function OwnerRow() {
+/**
+ * Neutral footer: connection status, not a person. No invented owner name or
+ * email - the only identity we have is the connected Xero organisation.
+ */
+function ConnectionFooter() {
   return (
     <div className="flex items-center justify-between gap-2 rounded-md p-1.5">
       <span className="flex min-w-0 items-center gap-2.5">
         <span
-          className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white text-xs font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+          className="flex size-2 shrink-0 rounded-full bg-brand-green"
           aria-hidden
-        >
-          {OWNER.initials}
-        </span>
-        <span className="min-w-0 leading-tight">
-          <span className="block truncate text-sm font-medium text-gray-900 dark:text-gray-50">
-            {OWNER.name}
-          </span>
-          <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
-            {OWNER.email}
-          </span>
+        />
+        <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-200">
+          Connected to Xero
         </span>
       </span>
       <ThemeToggle />
@@ -162,17 +157,17 @@ function OwnerRow() {
   )
 }
 
-export function Sidebar() {
+export function Sidebar({ tenantName }: { tenantName: string }) {
   return (
     <>
       {/* Desktop sidebar (lg+) */}
       <nav className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         <aside className="flex grow flex-col gap-y-6 overflow-y-auto border-r border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-brand-dark">
           <BrandMark />
-          <WorkspaceCard />
+          <WorkspaceCard tenantName={tenantName} />
           <NavSection />
           <div className="mt-auto border-t border-gray-200 pt-3 dark:border-white/10">
-            <OwnerRow />
+            <ConnectionFooter />
           </div>
         </aside>
       </nav>
@@ -182,7 +177,7 @@ export function Sidebar() {
         <BrandMark />
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
-          <MobileSidebar />
+          <MobileSidebar tenantName={tenantName} />
         </div>
       </div>
     </>
