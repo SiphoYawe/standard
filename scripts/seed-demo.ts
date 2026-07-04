@@ -141,11 +141,12 @@ async function main(): Promise<void> {
 
   // 3) Resolve chart-of-accounts codes to post against.
   const accounts = await gw.getAccounts();
-  const bank = pickAccountByType(accounts, ["BANK"], false);
+  let bank = pickAccountByType(accounts, ["BANK"], false);
   const revenue = pickAccountByType(accounts, ["REVENUE", "SALES"], true);
   const expense = pickAccountByType(accounts, ["DIRECTCOSTS", "EXPENSE", "OVERHEADS"], true);
   if (!bank?.accountID && !bank?.code) {
-    fail("No BANK account found in the org. A demo company should have one.");
+    log("No BANK account found; creating one for the demo (Standard Demo Bank).");
+    bank = await gw.createBankAccount("Standard Demo Bank", "0900");
   }
   if (!revenue?.code) fail("No revenue/sales account with a code found.");
   if (!expense?.code) fail("No expense/direct-costs account with a code found.");
@@ -155,6 +156,43 @@ async function main(): Promise<void> {
     `Accounts -> bank: ${bank!.name ?? bank!.accountID}, ` +
       `revenue: ${revCode} (${revenue.name}), expense: ${expCode} (${expense.name})`,
   );
+
+  // 3b) Idempotent cleanup: void/delete anything a previous seed run created
+  //     (marked with the REF prefix) so re-runs produce a clean, non-duplicated
+  //     ledger. Linked transactions go first, since they block voiding invoices.
+  const hasRef = (r?: string | null): boolean => (r ?? "").startsWith(REF);
+  let cleaned = 0;
+  for (const lt of await gw.getLinkedTransactions()) {
+    if (lt.linkedTransactionID) {
+      try {
+        await gw.deleteLinkedTransaction(lt.linkedTransactionID);
+        cleaned++;
+      } catch {
+        /* already gone */
+      }
+    }
+  }
+  for (const inv of await gw.getAllInvoices()) {
+    if (hasRef(inv.reference) && inv.invoiceID) {
+      try {
+        await gw.voidOrDeleteInvoice(inv.invoiceID, String(inv.status) === "DRAFT");
+        cleaned++;
+      } catch {
+        /* already void/paid */
+      }
+    }
+  }
+  for (const bt of await gw.getBankTransactions()) {
+    if (hasRef(bt.reference) && bt.bankTransactionID) {
+      try {
+        await gw.deleteBankTransaction(bt.bankTransactionID);
+        cleaned++;
+      } catch {
+        /* already gone */
+      }
+    }
+  }
+  if (cleaned) log(`Cleanup: removed ${cleaned} docs from previous seed run(s).`);
 
   // 4) Reuse contacts by name (Xero rejects duplicate contact names on re-run).
   const existing = await gw.getContacts();
@@ -264,6 +302,7 @@ async function main(): Promise<void> {
     type: "SPEND",
     bankAccountID: bank!.accountID,
     bankAccountCode: bank!.accountID ? undefined : bank!.code,
+    contactID: metroMaterials, // supplier on record; the customer is only inferred from the description
     reference: `${REF} Northwind support hours (overrun)`, // description-only inference
     date: DATE,
     lineItems: [
@@ -298,6 +337,7 @@ async function main(): Promise<void> {
     type: "SPEND",
     bankAccountID: bank!.accountID,
     bankAccountCode: bank!.accountID ? undefined : bank!.code,
+    contactID: cityCourier,
     reference: `${REF} Rivergreen supplies`,
     date: DATE,
     lineItems: [{ description: "Sundry supplies, Rivergreen", unitAmount: 500, accountCode: expCode }],
@@ -329,6 +369,7 @@ async function main(): Promise<void> {
     type: "SPEND",
     bankAccountID: bank!.accountID,
     bankAccountCode: bank!.accountID ? undefined : bank!.code,
+    contactID: cityCourier,
     reference: `${REF} BH Studios stock photos`, // abbreviation-only inference
     date: DATE,
     lineItems: [{ description: "Stock photography, BH Studios", unitAmount: 1200, accountCode: expCode }],

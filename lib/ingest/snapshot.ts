@@ -60,7 +60,11 @@ export async function buildSnapshot(
     process.env.XERO_BASE_CURRENCY ??
     "USD";
 
-  const invoiceTxns = [...accrecInvoices, ...accpayInvoices].map((inv) => {
+  const invoiceTxns = [...accrecInvoices, ...accpayInvoices]
+    // Drop voided/deleted invoices: they carry no real revenue or cost and must
+    // never inflate a customer's margin (AD-4 correctness).
+    .filter((inv) => !DEAD_STATUSES.includes(str(inv.status) ?? ""))
+    .map((inv) => {
     const statusStr = str(inv.status) ?? "";
     const editable =
       OPEN_INVOICE_STATUSES.includes(statusStr) && (inv.amountPaid ?? 0) === 0;
@@ -86,7 +90,10 @@ export async function buildSnapshot(
     };
   });
 
-  const bankTxns = bankTransactions.map((bt) => {
+  const bankTxns = bankTransactions
+    // Drop deleted/voided bank transactions so they never count as cost.
+    .filter((bt) => !DEAD_STATUSES.includes(str(bt.status) ?? ""))
+    .map((bt) => {
     const rawStatus = str(bt.status) ?? "";
     const editable = !bt.isReconciled && !DEAD_STATUSES.includes(rawStatus);
     return {

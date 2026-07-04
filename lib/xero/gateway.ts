@@ -852,6 +852,48 @@ export class XeroGateway {
     return body.bankTransactions ?? [];
   }
 
+  /* ------------------------- seed cleanup -------------------------- *
+   * Story 1.4 idempotency: remove docs a previous seed run created so a
+   * re-run produces a clean, non-duplicated demo ledger.                  */
+
+  /** All invoices, both ACCREC and ACCPAY (seed cleanup). */
+  async getAllInvoices(): Promise<Invoice[]> {
+    const [accrec, accpay] = await Promise.all([
+      this.getInvoicesByType("ACCREC"),
+      this.getInvoicesByType("ACCPAY"),
+    ]);
+    return [...accrec, ...accpay];
+  }
+
+  /** Void an AUTHORISED invoice, or delete a DRAFT one (seed cleanup). */
+  async voidOrDeleteInvoice(invoiceID: string, draft: boolean): Promise<void> {
+    await this.metered<Invoices>(true, () =>
+      this.api.updateInvoice(this.tenantId, invoiceID, {
+        invoices: [
+          { status: draft ? Invoice.StatusEnum.DELETED : Invoice.StatusEnum.VOIDED },
+        ],
+      }),
+    );
+  }
+
+  /** Delete a bank transaction (seed cleanup). */
+  async deleteBankTransaction(bankTransactionID: string): Promise<void> {
+    await this.metered<BankTransactions>(true, () =>
+      this.api.updateBankTransaction(this.tenantId, bankTransactionID, {
+        bankTransactions: [{ status: BankTransaction.StatusEnum.DELETED }],
+      }),
+    );
+  }
+
+  /** Delete a linked transaction so its source invoice can be voided (seed cleanup). */
+  async deleteLinkedTransaction(linkedTransactionID: string): Promise<void> {
+    await this.metered<unknown>(true, () =>
+      this.api.deleteLinkedTransaction(this.tenantId, linkedTransactionID) as Promise<{
+        body: unknown;
+      }>,
+    );
+  }
+
   /* -------------------------- seed writes -------------------------- *
    * Story 1.4 only. These create the demo org through the gateway so the
    * seed script never touches xero-node (AD-2).                            */
@@ -868,6 +910,35 @@ export class XeroGateway {
       throw new XeroGatewayError("Xero returned no contact on create.", "XERO_SEED");
     }
     return { contactID: contact.contactID, name: contact.name ?? input.name };
+  }
+
+  /**
+   * Create a BANK account when the org has none (seed only) - PUT /Accounts
+   * (accounting.settings). Fresh trial orgs ship a default chart of accounts but
+   * no bank account, so the seed needs to add one to post bank transactions.
+   */
+  async createBankAccount(name: string, code: string): Promise<SeedAccount> {
+    const account: Account = {
+      name,
+      code,
+      type: "BANK" as Account.TypeEnum,
+      bankAccountNumber: `SD${code}00000000`,
+      bankAccountType: "BANK" as Account.BankAccountTypeEnum,
+    };
+    const body = await this.metered<Accounts>(true, () =>
+      this.api.createAccount(this.tenantId, account),
+    );
+    const created = body.accounts?.[0];
+    if (!created?.accountID) {
+      throw new XeroGatewayError("Xero returned no account on create.", "XERO_SEED");
+    }
+    return {
+      accountID: created.accountID,
+      code: created.code,
+      name: created.name,
+      type: created.type != null ? String(created.type) : undefined,
+      status: created.status != null ? String(created.status) : undefined,
+    };
   }
 
   /** Create an ACCREC/ACCPAY invoice - POST /Invoices (accounting.transactions). */
