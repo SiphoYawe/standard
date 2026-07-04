@@ -8,7 +8,17 @@ import { Cancel01Icon, Menu01Icon } from "@hugeicons/core-free-icons"
 import { cx, focusRing } from "@/components/tremor/utils"
 import { navigation, shortcuts } from "./nav"
 
-export function MobileSidebar() {
+/** Up-to-two-letter initials from the connected organisation name. */
+function initialsFrom(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "ORG"
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]!.toUpperCase())
+    .join("")
+}
+
+export function MobileSidebar({ tenantName }: { tenantName: string }) {
   const [open, setOpen] = React.useState(false)
 
   React.useEffect(() => {
@@ -85,6 +95,24 @@ export function MobileSidebar() {
           >
             <HugeiconsIcon icon={Cancel01Icon} className="size-5" aria-hidden />
           </button>
+        </div>
+
+        {/* Connected Xero organisation - the real identity, never a placeholder. */}
+        <div className="flex w-full items-center gap-x-2.5 rounded-md border border-gray-300 bg-white p-2 text-sm shadow-xs dark:border-white/10 dark:bg-white/5">
+          <span
+            className="flex aspect-square size-8 items-center justify-center rounded bg-brand-green p-2 text-xs font-medium text-white"
+            aria-hidden
+          >
+            {initialsFrom(tenantName)}
+          </span>
+          <div className="truncate">
+            <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">
+              {tenantName}
+            </p>
+            <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+              Xero organisation
+            </p>
+          </div>
         </div>
 
         <nav aria-label="mobile navigation" className="flex flex-1 flex-col space-y-8">

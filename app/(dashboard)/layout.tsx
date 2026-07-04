@@ -1,16 +1,10 @@
-import { Sidebar } from "./_components/Sidebar"
-
+// Thin container. The connect-first screen renders full-bleed (no sidebar) and
+// the dashboard renders its own Sidebar + main shell, so the shell is chosen in
+// page.tsx per verdict state rather than forced on every child here.
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <div className="mx-auto min-h-full max-w-screen-2xl bg-gray-50 dark:bg-ink">
-      <Sidebar />
-      <main className="lg:pl-72">
-        <div className="p-4 sm:px-6 sm:py-8 lg:px-10 lg:py-8">{children}</div>
-      </main>
-    </div>
-  )
+  return children
 }
