@@ -1,0 +1,147 @@
+{
+  "tenantId": "demo-tenant-0001",
+  "snapshotId": "snap-2026-07-05T09-00-00Z",
+  "baseCurrency": "GBP",
+  "createdAt": "2026-07-05T09:00:00Z",
+  "contacts": [
+    { "contactID": "cust-halton", "name": "Halton Estates", "isCustomer": true, "isSupplier": false },
+    { "contactID": "cust-mercer", "name": "Mercer & Co", "isCustomer": true, "isSupplier": false },
+    { "contactID": "cust-oakwell", "name": "Oakwell Lettings", "isCustomer": true, "isSupplier": false },
+    { "contactID": "cust-brightside", "name": "Brightside Cafe", "isCustomer": true, "isSupplier": false },
+    { "contactID": "cust-tandel", "name": "Tandel Developments", "isCustomer": true, "isSupplier": false },
+    { "contactID": "supp-merchants", "name": "City Plumbing Merchants", "isCustomer": false, "isSupplier": true },
+    { "contactID": "supp-trade", "name": "Trade Counter Direct", "isCustomer": false, "isSupplier": true },
+    { "contactID": "supp-fleet", "name": "Fleet Lease Co", "isCustomer": false, "isSupplier": true },
+    { "contactID": "supp-insure", "name": "TradeSure Insurance", "isCustomer": false, "isSupplier": true },
+    { "contactID": "supp-soft", "name": "Tradify Software", "isCustomer": false, "isSupplier": true },
+    { "contactID": "supp-acct", "name": "Ledgerwise Accountants", "isCustomer": false, "isSupplier": true },
+    { "contactID": "supp-fuel", "name": "Shell Fuel Cards", "isCustomer": false, "isSupplier": true }
+  ],
+  "transactions": [
+    {
+      "type": "ACCREC", "id": "inv-accrec-halton", "source": "Invoice",
+      "contactID": "cust-halton", "contactName": "Halton Estates", "reference": "INV-1001",
+      "date": "2026-05-04", "total": 21400, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Bathroom refit programme", "lineAmount": 21400, "accountCode": "200" }]
+    },
+    {
+      "type": "ACCREC", "id": "inv-accrec-mercer", "source": "Invoice",
+      "contactID": "cust-mercer", "contactName": "Mercer & Co", "reference": "INV-1002",
+      "date": "2026-05-09", "total": 6100, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Boiler service & repairs", "lineAmount": 6100, "accountCode": "200" }]
+    },
+    {
+      "type": "ACCREC", "id": "inv-accrec-oakwell", "source": "Invoice",
+      "contactID": "cust-oakwell", "contactName": "Oakwell Lettings", "reference": "INV-1003",
+      "date": "2026-05-12", "total": 18900, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Portfolio maintenance", "lineAmount": 18900, "accountCode": "200" }]
+    },
+    {
+      "type": "ACCREC", "id": "inv-accrec-brightside", "source": "Invoice",
+      "contactID": "cust-brightside", "contactName": "Brightside Cafe", "reference": "INV-1004",
+      "date": "2026-05-18", "total": 4200, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Kitchen plumbing", "lineAmount": 4200, "accountCode": "200" }]
+    },
+    {
+      "type": "ACCREC", "id": "inv-accrec-tandel", "source": "Invoice",
+      "contactID": "cust-tandel", "contactName": "Tandel Developments", "reference": "INV-1005",
+      "date": "2026-05-22", "total": 32000, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "New-build first & second fix", "lineAmount": 32000, "accountCode": "200" }]
+    },
+
+    {
+      "type": "ACCPAY", "id": "inv-accpay-8801", "source": "Invoice",
+      "contactID": "supp-merchants", "contactName": "City Plumbing Merchants", "reference": "PO-HAL-114",
+      "date": "2026-05-05", "total": 9600, "currency": "GBP", "status": "AUTHORISED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Copper, fittings & sanitaryware", "lineAmount": 9600, "accountCode": "310" }]
+    },
+    {
+      "type": "ACCPAY", "id": "inv-accpay-8802", "source": "Invoice",
+      "contactID": "supp-merchants", "contactName": "City Plumbing Merchants", "reference": "PO-OAK-201",
+      "date": "2026-05-13", "total": 9200, "currency": "GBP", "status": "AUTHORISED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Materials for portfolio works", "lineAmount": 9200, "accountCode": "310" }]
+    },
+    {
+      "type": "SPEND", "id": "bt-parts-bright", "source": "BankTransaction",
+      "contactID": "supp-trade", "contactName": "Trade Counter Direct", "reference": "CARD-5521",
+      "date": "2026-05-19", "total": 1100, "currency": "GBP", "status": "RECONCILED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Waste, traps & tap parts", "lineAmount": 1100, "accountCode": "310" }]
+    },
+
+    {
+      "type": "ACCPAY", "id": "inv-accpay-8821", "source": "Invoice",
+      "contactID": "supp-merchants", "contactName": "City Plumbing Merchants", "reference": "Halton",
+      "date": "2026-05-06", "total": 8400, "currency": "GBP", "status": "AUTHORISED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Bathroom suite — Halton site", "lineAmount": 8400, "accountCode": "310" }]
+    },
+    {
+      "type": "ACCPAY", "id": "inv-accpay-9012", "source": "Invoice",
+      "contactID": "supp-merchants", "contactName": "City Plumbing Merchants", "reference": "PO-2277",
+      "date": "2026-05-10", "total": 5200, "currency": "GBP", "status": "AUTHORISED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Boiler parts — Mercer job", "lineAmount": 5200, "accountCode": "310" }]
+    },
+    {
+      "type": "ACCPAY", "id": "inv-accpay-7740", "source": "Invoice",
+      "contactID": "supp-merchants", "contactName": "City Plumbing Merchants", "reference": "PO-4410",
+      "date": "2026-05-23", "total": 12400, "currency": "GBP", "status": "AUTHORISED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-2", "description": "Phase 2 fit-out — Tandel", "lineAmount": 12400, "accountCode": "310" }]
+    },
+    {
+      "type": "ACCPAY", "id": "inv-accpay-7741", "source": "Invoice",
+      "contactID": "supp-merchants", "contactName": "City Plumbing Merchants", "reference": "PO-4411",
+      "date": "2026-05-28", "total": 6200, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Phase 3 rough-in — Tandel", "lineAmount": 6200, "accountCode": "310" }]
+    },
+
+    {
+      "type": "SPEND", "id": "bt-2290", "source": "BankTransaction",
+      "contactID": "supp-trade", "contactName": "Trade Counter Direct", "reference": "",
+      "date": "2026-05-07", "total": 3800, "currency": "GBP", "status": "RECONCILED", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Trade counter — misc consumables", "lineAmount": 3800, "accountCode": "310" }]
+    },
+
+    {
+      "type": "ACCPAY", "id": "inv-accpay-van", "source": "Invoice",
+      "contactID": "supp-fleet", "contactName": "Fleet Lease Co", "reference": "FL-Q2",
+      "date": "2026-04-30", "total": 4800, "currency": "GBP", "status": "AUTHORISED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Van lease — quarterly", "lineAmount": 4800, "accountCode": "449" }]
+    },
+    {
+      "type": "ACCPAY", "id": "inv-accpay-insure", "source": "Invoice",
+      "contactID": "supp-insure", "contactName": "TradeSure Insurance", "reference": "INS-88",
+      "date": "2026-05-01", "total": 3600, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Public liability insurance", "lineAmount": 3600, "accountCode": "433" }]
+    },
+    {
+      "type": "ACCPAY", "id": "inv-accpay-soft", "source": "Invoice",
+      "contactID": "supp-soft", "contactName": "Tradify Software", "reference": "SUB-341",
+      "date": "2026-05-02", "total": 2400, "currency": "GBP", "status": "AUTHORISED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Job management software subscription", "lineAmount": 2400, "accountCode": "489" }]
+    },
+    {
+      "type": "ACCPAY", "id": "inv-accpay-acct", "source": "Invoice",
+      "contactID": "supp-acct", "contactName": "Ledgerwise Accountants", "reference": "ACC-19",
+      "date": "2026-05-03", "total": 1800, "currency": "GBP", "status": "PAID", "editable": false,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Quarterly accountancy fees", "lineAmount": 1800, "accountCode": "441" }]
+    },
+    {
+      "type": "SPEND", "id": "bt-fuel", "source": "BankTransaction",
+      "contactID": "supp-fuel", "contactName": "Shell Fuel Cards", "reference": "FUEL-05",
+      "date": "2026-05-15", "total": 2600, "currency": "GBP", "status": "RECONCILED", "editable": true,
+      "lineItems": [{ "lineItemID": "li-1", "description": "Fuel — mixed sites", "lineAmount": 2600, "accountCode": "449" }]
+    }
+  ],
+  "linkedTransactions": [
+    { "linkedTransactionID": "lt-4411", "sourceTransactionID": "inv-accpay-8801", "sourceLineItemID": "li-1", "contactID": "cust-halton", "amount": 9600 },
+    { "linkedTransactionID": "lt-5120", "sourceTransactionID": "inv-accpay-8802", "sourceLineItemID": "li-1", "contactID": "cust-oakwell", "amount": 9200 },
+    { "linkedTransactionID": "lt-5330", "sourceTransactionID": "bt-parts-bright", "sourceLineItemID": "li-1", "contactID": "cust-brightside", "amount": 1100 }
+  ],
+  "payments": [
+    { "paymentID": "pay-1001", "invoiceID": "inv-accrec-halton", "amount": 21400, "date": "2026-06-01" },
+    { "paymentID": "pay-1002", "invoiceID": "inv-accrec-mercer", "amount": 6100, "date": "2026-06-02" }
+  ],
+  "items": [
+    { "itemID": "item-labour", "code": "LAB", "name": "Labour (day rate)" },
+    { "itemID": "item-callout", "code": "CALL", "name": "Call-out" }
+  ]
+}

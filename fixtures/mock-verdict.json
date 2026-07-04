@@ -1,0 +1,242 @@
+{
+  "version": 1,
+  "tenantId": "demo-tenant-0001",
+  "tenantName": "Dave's Plumbing Ltd",
+  "snapshotId": "snap-2026-07-05T09-00-00Z",
+  "generatedAt": "2026-07-05T09:00:00Z",
+  "baseCurrency": "GBP",
+  "kpis": {
+    "hiddenLossesUncovered": 7900,
+    "moneyLoserCount": 2,
+    "blendedStandard": 18450,
+    "revenueAtRisk": 41200
+  },
+  "customers": [
+    {
+      "customerId": "cust-halton",
+      "customerName": "Halton Estates",
+      "revenue": 21400,
+      "directCost": 20800,
+      "overheadCost": 3800,
+      "ownerTimeCost": 0,
+      "trueMargin": -3200,
+      "currency": "GBP",
+      "isMoneyLoser": true,
+      "confidence": "High",
+      "lowConfidenceCount": 1,
+      "why": "Your biggest account by revenue is your biggest loss. Repeat call-backs and materials on their jobs eat the whole invoice, and a chunk of it was never re-billed.",
+      "allocations": [
+        {
+          "id": "alloc-halton-1",
+          "customerId": "cust-halton",
+          "kind": "direct",
+          "amount": 9600,
+          "currency": "GBP",
+          "confidence": "High",
+          "rationale": "Materials billed to this customer via a linked transaction.",
+          "sources": [
+            { "type": "LinkedTransaction", "xeroId": "lt-4411", "description": "Merchants — copper & fittings", "amount": 9600, "editable": true }
+          ]
+        },
+        {
+          "id": "alloc-halton-2",
+          "customerId": "cust-halton",
+          "kind": "direct",
+          "amount": 7400,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "rationale": "Supplier bill references the Halton site in its description.",
+          "sources": [
+            { "type": "Invoice", "xeroId": "inv-accpay-8821", "lineItemId": "li-1", "description": "Bathroom suite — Halton site", "amount": 7400, "editable": true }
+          ]
+        },
+        {
+          "id": "alloc-halton-3",
+          "customerId": "cust-halton",
+          "kind": "direct",
+          "amount": 3800,
+          "currency": "GBP",
+          "confidence": "Low",
+          "rationale": "Bank spend near the job dates; inferred, needs confirmation.",
+          "sources": [
+            { "type": "BankTransaction", "xeroId": "bt-2290", "description": "Trade counter — misc", "amount": 3800, "editable": false }
+          ]
+        },
+        {
+          "id": "alloc-halton-oh",
+          "customerId": "cust-halton",
+          "kind": "overhead",
+          "amount": 3800,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "driver": "revenue-share",
+          "rationale": "Share of van, insurance and software by revenue.",
+          "sources": [
+            { "type": "Report", "xeroId": "pl-2026-q2", "description": "Overhead pool (revenue-share)", "amount": 3800, "editable": false }
+          ]
+        }
+      ],
+      "draftedFix": "Hi Halton team,\n\nWe've loved working with you this year. Reviewing the last few jobs, the call-back rate and materials on your sites have pushed our costs above what we invoiced. To keep giving you the same fast response, we'll need to adjust our rates by ~15% from next month and move to a 20% deposit on jobs over £2,000.\n\nHappy to walk through the detail.\n\nBest,\nDave"
+    },
+    {
+      "customerId": "cust-mercer",
+      "customerName": "Mercer & Co",
+      "revenue": 6100,
+      "directCost": 5200,
+      "overheadCost": 1400,
+      "ownerTimeCost": 0,
+      "trueMargin": -500,
+      "currency": "GBP",
+      "isMoneyLoser": true,
+      "confidence": "Medium",
+      "lowConfidenceCount": 0,
+      "why": "A small account that quietly slips under water once overhead is shared in. Not dramatic, but not worth the current price.",
+      "allocations": [
+        {
+          "id": "alloc-mercer-1",
+          "customerId": "cust-mercer",
+          "kind": "direct",
+          "amount": 5200,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "rationale": "Bill description matches the Mercer job reference.",
+          "sources": [
+            { "type": "Invoice", "xeroId": "inv-accpay-9012", "lineItemId": "li-1", "description": "Boiler parts — Mercer", "amount": 5200, "editable": true }
+          ]
+        },
+        {
+          "id": "alloc-mercer-oh",
+          "customerId": "cust-mercer",
+          "kind": "overhead",
+          "amount": 1400,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "driver": "revenue-share",
+          "sources": [
+            { "type": "Report", "xeroId": "pl-2026-q2", "description": "Overhead pool (revenue-share)", "amount": 1400, "editable": false }
+          ]
+        }
+      ],
+      "draftedFix": "Hi Mercer & Co,\n\nQuick note on pricing — our costs on your recent jobs have crept up. From next month we'll adjust rates slightly to keep things sustainable. Nothing changes on the service you get.\n\nThanks,\nDave"
+    },
+    {
+      "customerId": "cust-oakwell",
+      "customerName": "Oakwell Lettings",
+      "revenue": 18900,
+      "directCost": 9200,
+      "overheadCost": 3400,
+      "ownerTimeCost": 0,
+      "trueMargin": 6300,
+      "currency": "GBP",
+      "isMoneyLoser": false,
+      "confidence": "High",
+      "lowConfidenceCount": 0,
+      "why": "A genuinely strong account: steady volume, clean jobs, materials well under revenue.",
+      "allocations": [
+        {
+          "id": "alloc-oakwell-1",
+          "customerId": "cust-oakwell",
+          "kind": "direct",
+          "amount": 9200,
+          "currency": "GBP",
+          "confidence": "High",
+          "sources": [
+            { "type": "LinkedTransaction", "xeroId": "lt-5120", "description": "Materials — Oakwell portfolio", "amount": 9200, "editable": true }
+          ]
+        },
+        {
+          "id": "alloc-oakwell-oh",
+          "customerId": "cust-oakwell",
+          "kind": "overhead",
+          "amount": 3400,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "driver": "revenue-share",
+          "sources": [
+            { "type": "Report", "xeroId": "pl-2026-q2", "description": "Overhead pool (revenue-share)", "amount": 3400, "editable": false }
+          ]
+        }
+      ]
+    },
+    {
+      "customerId": "cust-brightside",
+      "customerName": "Brightside Cafe",
+      "revenue": 4200,
+      "directCost": 1100,
+      "overheadCost": 800,
+      "ownerTimeCost": 0,
+      "trueMargin": 2300,
+      "currency": "GBP",
+      "isMoneyLoser": false,
+      "confidence": "High",
+      "lowConfidenceCount": 0,
+      "why": "Small but tidy. Low materials, quick jobs, healthy margin.",
+      "allocations": [
+        {
+          "id": "alloc-brightside-1",
+          "customerId": "cust-brightside",
+          "kind": "direct",
+          "amount": 1100,
+          "currency": "GBP",
+          "confidence": "High",
+          "sources": [
+            { "type": "LinkedTransaction", "xeroId": "lt-5330", "description": "Parts — Brightside", "amount": 1100, "editable": true }
+          ]
+        },
+        {
+          "id": "alloc-brightside-oh",
+          "customerId": "cust-brightside",
+          "kind": "overhead",
+          "amount": 800,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "driver": "revenue-share",
+          "sources": [
+            { "type": "Report", "xeroId": "pl-2026-q2", "description": "Overhead pool (revenue-share)", "amount": 800, "editable": false }
+          ]
+        }
+      ]
+    },
+    {
+      "customerId": "cust-tandel",
+      "customerName": "Tandel Developments",
+      "revenue": 32000,
+      "directCost": 18600,
+      "overheadCost": 5800,
+      "ownerTimeCost": 0,
+      "trueMargin": 7600,
+      "currency": "GBP",
+      "isMoneyLoser": false,
+      "confidence": "Medium",
+      "lowConfidenceCount": 2,
+      "why": "Your best absolute contributor, though a couple of large bills are only loosely tied to their sites and worth confirming.",
+      "allocations": [
+        {
+          "id": "alloc-tandel-1",
+          "customerId": "cust-tandel",
+          "kind": "direct",
+          "amount": 18600,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "rationale": "Two large supplier bills reference Tandel phases; amounts matched.",
+          "sources": [
+            { "type": "Invoice", "xeroId": "inv-accpay-7740", "lineItemId": "li-2", "description": "Phase 2 fit-out — Tandel", "amount": 12400, "editable": true },
+            { "type": "Invoice", "xeroId": "inv-accpay-7741", "lineItemId": "li-1", "description": "Phase 3 rough-in — Tandel", "amount": 6200, "editable": false }
+          ]
+        },
+        {
+          "id": "alloc-tandel-oh",
+          "customerId": "cust-tandel",
+          "kind": "overhead",
+          "amount": 5800,
+          "currency": "GBP",
+          "confidence": "Medium",
+          "driver": "revenue-share",
+          "sources": [
+            { "type": "Report", "xeroId": "pl-2026-q2", "description": "Overhead pool (revenue-share)", "amount": 5800, "editable": false }
+          ]
+        }
+      ]
+    }
+  ]
+}
