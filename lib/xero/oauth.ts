@@ -19,44 +19,57 @@ import { saveTokenSet } from "./gateway";
  * verifies against, independent of any env override (a misconfigured env can
  * never silently drop a required scope, see getConfiguredScopes below).
  */
+// We request GRANULAR scopes. The deprecated broad scopes (accounting.transactions,
+// accounting.reports.read) are rejected with invalid_scope by new Xero web apps
+// (granular scopes assigned since March 2026), so we must not request them.
+// Coverage: accounting.invoices covers Invoices, CreditNotes, LinkedTransactions,
+// Quotes and Items; accounting.banktransactions covers BankTransactions;
+// accounting.payments covers Payments; accounting.settings covers Items and
+// TrackingCategories; accounting.reports.profitandloss.read covers the P&L report.
 export const REQUIRED_XERO_SCOPES: readonly string[] = [
   "offline_access",
   "accounting.contacts",
-  "accounting.transactions",
+  "accounting.invoices",
+  "accounting.payments",
+  "accounting.banktransactions",
   "accounting.settings",
-  "accounting.reports.read",
+  "accounting.reports.profitandloss.read",
 ];
 
 export const FIXED_XERO_SCOPES = REQUIRED_XERO_SCOPES.join(" ");
 
 /**
- * Broad Accounting scopes are being replaced by granular ones (Xero doc:
- * "since March 2026, all new and existing Web and PKCE apps have been assigned
- * granular scopes"). A modern Xero app may therefore grant a granular scope
- * (e.g. `accounting.invoices`) in place of the broad scope we request
- * (`accounting.transactions`). The connect check must treat those grants as
- * satisfying the requirement, otherwise a fully-consented modern org would fail
- * loudly for the wrong reason. Each required broad scope is "satisfied" if the
- * granted set contains the scope itself OR any recognised equivalent below.
- * (A `.read`-only grant still proves consent to that data area; a later write
- * that lacks the write scope surfaces its own explicit Xero error at write-back.)
+ * A required granular scope is "satisfied" if the granted set contains the scope
+ * itself, its read-only variant, or the deprecated broad parent (for older apps
+ * that still carry broad scopes). This keeps the connect check from failing for
+ * the wrong reason across granular and legacy-broad apps. A read-only grant still
+ * proves consent to that data area; a later write that lacks the write scope
+ * surfaces its own explicit Xero error at write-back.
  */
 const SCOPE_EQUIVALENTS: Record<string, readonly string[]> = {
-  "accounting.transactions": [
-    "accounting.transactions",
-    "accounting.transactions.read",
+  "accounting.contacts": ["accounting.contacts", "accounting.contacts.read"],
+  "accounting.invoices": [
     "accounting.invoices",
     "accounting.invoices.read",
+    "accounting.transactions",
+    "accounting.transactions.read",
+  ],
+  "accounting.payments": [
     "accounting.payments",
     "accounting.payments.read",
+    "accounting.transactions",
+    "accounting.transactions.read",
+  ],
+  "accounting.banktransactions": [
     "accounting.banktransactions",
     "accounting.banktransactions.read",
+    "accounting.transactions",
+    "accounting.transactions.read",
   ],
-  "accounting.contacts": ["accounting.contacts", "accounting.contacts.read"],
   "accounting.settings": ["accounting.settings", "accounting.settings.read"],
-  "accounting.reports.read": [
-    "accounting.reports.read",
+  "accounting.reports.profitandloss.read": [
     "accounting.reports.profitandloss.read",
+    "accounting.reports.read",
   ],
 };
 
