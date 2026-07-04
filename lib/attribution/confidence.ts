@@ -9,7 +9,8 @@ import type { Allocation, Confidence } from "../contracts/verdict";
  *
  * Rubric:
  *   native Xero LinkedTransaction  -> High
- *   structured reference / contact / amount match, or a stated overhead driver -> Medium
+ *   structured reference / contact / amount match, a stated overhead driver, or
+ *     a stated owner-time estimate (hours x rate) -> Medium
  *   LLM inference                  -> Low
  *
  * Every function in this module is pure and side-effect free.
@@ -22,6 +23,7 @@ export type AttributionSignal =
   | "contact-match"
   | "amount-match"
   | "overhead-driver"
+  | "owner-estimate"
   | "llm-inference";
 
 /** Rank so confidences can be compared/ordered deterministically. */
@@ -36,6 +38,7 @@ export function confidenceForSignal(signal: AttributionSignal): Confidence {
     case "contact-match":
     case "amount-match":
     case "overhead-driver":
+    case "owner-estimate":
       return "Medium";
     case "llm-inference":
       return "Low";

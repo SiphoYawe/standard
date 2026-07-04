@@ -15,6 +15,10 @@ import { draftRepricingEmail } from "../attribution/draft";
  */
 
 export interface BuildOptions extends AttributionOptions {
+  // Inherits `ownerTime` from AttributionOptions (FR-7): an optional, off-by-
+  // default owner-time estimate. When supplied it is forwarded to `attribute`,
+  // which adds kind="owner_time" allocations; those flow into ownerTimeCost and
+  // trueMargin below. When omitted, owner-time is 0 and behaviour is unchanged.
   /** Human-readable org name for the Verdict header (snapshot has only tenantId). */
   tenantName?: string;
   /** ISO 8601 timestamp; defaults to now. */
