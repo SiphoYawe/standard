@@ -1,19 +1,11 @@
 import Image from "next/image"
-import { ChevronsUpDown } from "lucide-react"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cx, focusRing } from "@/components/tremor/utils"
 import { MobileSidebar } from "./MobileSidebar"
+import { OrgMenu } from "./OrgMenu"
 import { ThemeToggle } from "./ThemeToggle"
 import { navigation, shortcuts } from "./nav"
-
-/** Up-to-two-letter initials from the connected organisation name. */
-function initialsFrom(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return "ORG"
-  const letters = parts.slice(0, 2).map((p) => p[0]!.toUpperCase())
-  return letters.join("")
-}
 
 /** Standard logo lockup: light mark on light surfaces, all-green on dark teal. */
 function BrandMark() {
@@ -37,42 +29,6 @@ function BrandMark() {
         unoptimized
         className="hidden h-7 w-auto dark:block"
       />
-    </div>
-  )
-}
-
-/**
- * The connected-organisation indicator, styled like the template's workspace
- * switcher. Shows the real Xero org name from the Verdict - never a placeholder.
- */
-function WorkspaceCard({ tenantName }: { tenantName: string }) {
-  return (
-    <div
-      className={cx(
-        "flex w-full items-center gap-x-2.5 rounded-md border border-gray-300 bg-white p-2 text-sm shadow-xs",
-        "dark:border-white/10 dark:bg-white/5",
-      )}
-    >
-      <span
-        className="flex aspect-square size-8 items-center justify-center rounded bg-brand-green p-2 text-xs font-medium text-white"
-        aria-hidden
-      >
-        {initialsFrom(tenantName)}
-      </span>
-      <div className="flex w-full items-center justify-between gap-x-3 truncate">
-        <div className="truncate">
-          <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">
-            {tenantName}
-          </p>
-          <p className="truncate text-left text-xs text-gray-500 dark:text-gray-400">
-            Xero organisation
-          </p>
-        </div>
-        <ChevronsUpDown
-          className="size-5 shrink-0 text-gray-400"
-          aria-hidden
-        />
-      </div>
     </div>
   )
 }
@@ -164,7 +120,7 @@ export function Sidebar({ tenantName }: { tenantName: string }) {
       <nav className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         <aside className="flex grow flex-col gap-y-6 overflow-y-auto border-r border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-brand-dark">
           <BrandMark />
-          <WorkspaceCard tenantName={tenantName} />
+          <OrgMenu tenantName={tenantName} />
           <NavSection />
           <div className="mt-auto border-t border-gray-200 pt-3 dark:border-white/10">
             <ConnectionFooter />
