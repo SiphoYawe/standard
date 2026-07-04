@@ -54,7 +54,7 @@ function extractJson(text: string): string {
 async function draftViaLlm(customer: CustomerMargin, opts: DraftOptions): Promise<string> {
   const client = new Anthropic(opts.apiKey ? { apiKey: opts.apiKey } : undefined);
   const model = opts.model ?? process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
-  const owner = opts.ownerName ?? "Dave";
+  const owner = opts.ownerName ?? "The team";
   const cost = round2(customer.directCost + customer.overheadCost + customer.ownerTimeCost);
   const uplift = suggestedUpliftPct(customer);
 
@@ -91,7 +91,7 @@ async function draftViaLlm(customer: CustomerMargin, opts: DraftOptions): Promis
 }
 
 /** Deterministic fallback template — always works, no API key required. */
-export function templateDraft(customer: CustomerMargin, ownerName = "Dave"): string {
+export function templateDraft(customer: CustomerMargin, ownerName = "The team"): string {
   const cur = customer.currency;
   const cost = round2(customer.directCost + customer.overheadCost + customer.ownerTimeCost);
   const loss = round2(-customer.trueMargin);
@@ -122,5 +122,5 @@ export async function draftRepricingEmail(
       // Degrade safely to the deterministic template.
     }
   }
-  return templateDraft(customer, opts.ownerName ?? "Dave");
+  return templateDraft(customer, opts.ownerName ?? "The team");
 }
