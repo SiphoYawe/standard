@@ -880,7 +880,9 @@ export class XeroGateway {
   async deleteBankTransaction(bankTransactionID: string): Promise<void> {
     await this.metered<BankTransactions>(true, () =>
       this.api.updateBankTransaction(this.tenantId, bankTransactionID, {
-        bankTransactions: [{ status: BankTransaction.StatusEnum.DELETED }],
+        bankTransactions: [
+          { status: BankTransaction.StatusEnum.DELETED } as BankTransaction,
+        ],
       }),
     );
   }
@@ -921,9 +923,9 @@ export class XeroGateway {
     const account: Account = {
       name,
       code,
-      type: "BANK" as Account.TypeEnum,
+      type: "BANK" as unknown as Account["type"],
       bankAccountNumber: `SD${code}00000000`,
-      bankAccountType: "BANK" as Account.BankAccountTypeEnum,
+      bankAccountType: "BANK" as unknown as Account["bankAccountType"],
     };
     const body = await this.metered<Accounts>(true, () =>
       this.api.createAccount(this.tenantId, account),
