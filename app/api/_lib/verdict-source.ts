@@ -35,7 +35,7 @@ function isTruthyFlag(value: string | undefined): boolean {
 export function shouldServeMock(): boolean {
   if (isTruthyFlag(process.env.NEXT_PUBLIC_USE_MOCK_VERDICT)) return true;
   const supabaseWired =
-    Boolean(process.env.SUPABASE_URL) &&
+    Boolean(process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL) &&
     Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
   return !supabaseWired;
 }

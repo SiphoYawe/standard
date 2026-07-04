@@ -55,3 +55,14 @@ create table if not exists xero_rate_budget (
   updated_at  timestamptz not null default now(),
   primary key (tenant_id, day)
 );
+
+-- Security (AD-8, NFR-Security): the app touches Supabase ONLY server-side with the
+-- service-role key, which bypasses RLS. Enabling RLS with NO policies means the
+-- publishable/anon key (which ships in the browser bundle) can read/write NOTHING —
+-- critically, it can never reach xero_tokens (refresh tokens). Do not add anon/
+-- authenticated policies unless a genuine client-side, per-user access model is added.
+alter table xero_tokens      enable row level security;
+alter table snapshots        enable row level security;
+alter table verdicts         enable row level security;
+alter table writeback_runs   enable row level security;
+alter table xero_rate_budget enable row level security;
