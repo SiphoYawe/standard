@@ -59,12 +59,12 @@ async function main(): Promise<void> {
   }
   console.log("-".repeat(64));
   console.log(
-    `KPIs: hiddenLosses=£${verdict.kpis.hiddenLossesUncovered}  moneyLosers=${verdict.kpis.moneyLoserCount}  blendedStandard=£${verdict.kpis.blendedStandard}  revenueAtRisk=£${verdict.kpis.revenueAtRisk}`,
+    `KPIs: hiddenLosses=£${verdict.kpis.hiddenLossesUncovered}  moneyLosers=${verdict.kpis.moneyLoserCount}  blendedTrueMargin=£${verdict.kpis.blendedTrueMargin}  revenueAtRisk=£${verdict.kpis.revenueAtRisk}`,
   );
   console.log(`\nHalton "why": ${halton.why}`);
   console.log("=".repeat(64));
   console.log(
-    `PASS: Verdict.parse accepted the output — moneyLosers=${verdict.kpis.moneyLoserCount}, haltonMoneyLoser=${halton.isMoneyLoser}, haltonStandard=${halton.trueMargin}`,
+    `PASS: Verdict.parse accepted the output — moneyLosers=${verdict.kpis.moneyLoserCount}, haltonMoneyLoser=${halton.isMoneyLoser}, haltonTrueMargin=${halton.trueMargin}`,
   );
 }
 

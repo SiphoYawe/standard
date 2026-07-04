@@ -8,7 +8,7 @@
   "kpis": {
     "hiddenLossesUncovered": 7900,
     "moneyLoserCount": 2,
-    "blendedStandard": 18450,
+    "blendedTrueMargin": 18450,
     "revenueAtRisk": 41200
   },
   "customers": [

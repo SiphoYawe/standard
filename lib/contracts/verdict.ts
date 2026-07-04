@@ -70,7 +70,7 @@ export type CustomerMargin = z.infer<typeof CustomerMargin>;
 export const VerdictKpis = z.object({
   hiddenLossesUncovered: z.number(),
   moneyLoserCount: z.number().int().nonnegative(),
-  blendedStandard: z.number(),
+  blendedTrueMargin: z.number(),
   revenueAtRisk: z.number(),
 });
 export type VerdictKpis = z.infer<typeof VerdictKpis>;

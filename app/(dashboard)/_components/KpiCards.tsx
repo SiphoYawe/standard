@@ -82,7 +82,7 @@ export function KpiCards({
     },
     {
       label: "Blended true margin",
-      value: money(kpis.blendedStandard, currency),
+      value: money(kpis.blendedTrueMargin, currency),
       badge: "Net",
       badgeVariant: "neutral",
       context: "Across every customer, after real cost and overhead.",

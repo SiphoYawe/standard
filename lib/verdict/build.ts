@@ -141,7 +141,7 @@ export async function buildVerdict(
     kpis: {
       hiddenLossesUncovered: round2(sum(losers.map((m) => -m.trueMargin))),
       moneyLoserCount: losers.length,
-      blendedStandard: round2(sum(margins.map((m) => m.trueMargin))),
+      blendedTrueMargin: round2(sum(margins.map((m) => m.trueMargin))),
       revenueAtRisk: round2(sum(losers.map((m) => m.revenue))),
     },
     customers: margins,
