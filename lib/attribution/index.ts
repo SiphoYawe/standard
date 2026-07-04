@@ -26,6 +26,23 @@ export interface CustomerRef {
   revenue: number;
 }
 
+/**
+ * Owner-time input (FR-7): an OPTIONAL, off-by-default estimate of the owner's
+ * own hours on each customer. It is NEVER a ledger cost: it produces
+ * kind="owner_time" allocations that are always labelled an owner estimate and
+ * only affect true margin when this input is explicitly supplied. Provide either
+ * a flat per-customer map or a single default applied to every customer (or
+ * both: the per-customer map overrides the default).
+ */
+export interface OwnerTimeInput {
+  /** The owner's charge-out / opportunity rate, in base currency per hour. */
+  hourlyRate: number;
+  /** Explicit hours per customerId. Takes precedence over defaultHoursPerCustomer. */
+  hoursPerCustomer?: Record<string, number>;
+  /** Flat hours applied to every customer when no explicit figure is given. */
+  defaultHoursPerCustomer?: number;
+}
+
 export interface AttributionOptions {
   /** Force the LLM proposal pass on/off. Defaults to: is an API key available? */
   useLlm?: boolean;
@@ -33,6 +50,12 @@ export interface AttributionOptions {
   apiKey?: string;
   /** Overrides ANTHROPIC_MODEL / the default model. */
   model?: string;
+  /**
+   * Optional owner-time estimate (FR-7). Off by default: when omitted, no
+   * owner_time allocations are produced and behaviour is unchanged (owner-time
+   * contributes 0 to true margin). Only applied when explicitly passed.
+   */
+  ownerTime?: OwnerTimeInput;
 }
 
 export interface AttributionResult {
@@ -127,6 +150,56 @@ function matchCustomerByReference(
   const c = hits[0];
   const inRef = Boolean(txn.reference && txn.reference.toLowerCase().includes(customerToken(c.customerName)));
   return { customerId: c.customerId, customerName: c.customerName, field: inRef ? "reference" : "description" };
+}
+
+// --- owner-time builder (FR-7) -----------------------------------------------
+
+/**
+ * Owner-time allocations (FR-7). OPTIONAL and off by default: only called when
+ * an OwnerTimeInput is explicitly supplied. Each allocation is kind="owner_time",
+ * confidence Medium (a stated hours x rate figure), and carries a synthetic
+ * OwnerEstimate source so it never traces to a real Xero transaction and is
+ * never re-taggable (editable: false). The rationale ALWAYS labels it an owner
+ * estimate, never a ledger cost.
+ */
+function ownerTimeAllocations(
+  customers: CustomerRef[],
+  ownerTime: OwnerTimeInput,
+  currency: string,
+): Allocation[] {
+  const rate = ownerTime.hourlyRate;
+  if (!Number.isFinite(rate) || rate <= 0) return [];
+
+  const out: Allocation[] = [];
+  for (const c of customers) {
+    const hours = ownerTime.hoursPerCustomer?.[c.customerId] ?? ownerTime.defaultHoursPerCustomer ?? 0;
+    if (!Number.isFinite(hours) || hours <= 0) continue;
+
+    const amount = round2(hours * rate);
+    if (amount <= 0) continue;
+
+    out.push({
+      id: `owner-time-${c.customerId}`,
+      customerId: c.customerId,
+      kind: "owner_time",
+      amount,
+      currency,
+      confidence: confidenceForSignal("owner-estimate"),
+      rationale:
+        `Owner estimate, not a ledger cost: ${hours} h of your own time at ` +
+        `${money(rate, currency)}/h = ${money(amount, currency)} on this customer.`,
+      sources: [
+        {
+          type: "OwnerEstimate",
+          xeroId: `owner-time-${c.customerId}`,
+          description: `${hours} h owner time at ${money(rate, currency)}/h (owner estimate)`,
+          amount,
+          editable: false,
+        },
+      ],
+    });
+  }
+  return out;
 }
 
 // --- LLM proposal pass (AD-9) ------------------------------------------------
@@ -363,6 +436,13 @@ export async function attribute(
         sources,
       });
     }
+  }
+
+  // (d) Owner time (FR-7): OPTIONAL, off by default. Only when an ownerTime
+  // input is explicitly supplied does this add kind="owner_time" allocations;
+  // otherwise the core computation is untouched and owner-time stays 0.
+  if (opts.ownerTime) {
+    allocations.push(...ownerTimeAllocations(customers, opts.ownerTime, baseCurrency));
   }
 
   return { allocations, customers, baseCurrency, usedLlm };

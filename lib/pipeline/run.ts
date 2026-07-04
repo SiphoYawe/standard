@@ -1,5 +1,6 @@
 import { LedgerSnapshot } from "@/lib/contracts/ledger";
 import type { Verdict } from "@/lib/contracts/verdict";
+import type { OwnerTimeInput } from "@/lib/attribution";
 import { buildVerdict } from "@/lib/verdict/build";
 import { buildSnapshot } from "@/lib/ingest/snapshot";
 import { XeroGateway } from "@/lib/xero/gateway";
@@ -63,8 +64,15 @@ async function storeVerdict(verdict: Verdict): Promise<void> {
  * Run attribution on the latest snapshot and store the resulting Verdict.
  * Uses the LLM proposal pass only when ANTHROPIC_API_KEY is present; otherwise
  * the deterministic fallback still produces a valid Verdict (AD-9).
+ *
+ * `ownerTime` (FR-7) is optional and off by default: when omitted, owner-time
+ * contributes 0 and the verdict is unchanged; when supplied it is forwarded to
+ * buildVerdict, which includes it in true margin as a labelled owner estimate.
  */
-export async function computeAndStoreVerdict(tenantId: string): Promise<Verdict> {
+export async function computeAndStoreVerdict(
+  tenantId: string,
+  opts: { ownerTime?: OwnerTimeInput } = {},
+): Promise<Verdict> {
   const snapshot = await loadLatestSnapshot(tenantId);
   if (!snapshot) {
     throw new Error(
@@ -75,6 +83,7 @@ export async function computeAndStoreVerdict(tenantId: string): Promise<Verdict>
   const verdict = await buildVerdict(snapshot, {
     tenantName,
     useLlm: Boolean(process.env.ANTHROPIC_API_KEY),
+    ownerTime: opts.ownerTime,
   });
   await storeVerdict(verdict);
   return verdict;
@@ -85,10 +94,13 @@ export async function computeAndStoreVerdict(tenantId: string): Promise<Verdict>
  * snapshot, then compute and store the Verdict. This is the single call Make's
  * on-demand scenario triggers. Set `refresh=false` to skip the Xero read and
  * recompute from the latest cached snapshot (zero Xero calls, NFR-RateLimit).
+ *
+ * `ownerTime` (FR-7) is optional and off by default; when supplied it is
+ * forwarded through to the verdict as a labelled owner-time estimate.
  */
 export async function runPipeline(
   tenantId: string,
-  opts: { refresh?: boolean } = {},
+  opts: { refresh?: boolean; ownerTime?: OwnerTimeInput } = {},
 ): Promise<{ verdict: Verdict; refreshed: boolean; xeroCallsUsed: number }> {
   let xeroCallsUsed = 0;
   const refresh = opts.refresh ?? true;
@@ -109,6 +121,6 @@ export async function runPipeline(
     if (error) throw new Error(`Snapshot persist failed: ${error.message}`);
   }
 
-  const verdict = await computeAndStoreVerdict(tenantId);
+  const verdict = await computeAndStoreVerdict(tenantId, { ownerTime: opts.ownerTime });
   return { verdict, refreshed: refresh, xeroCallsUsed };
 }
