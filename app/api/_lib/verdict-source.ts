@@ -64,3 +64,23 @@ export async function resolveVerdict(
     };
   }
 }
+
+/**
+ * True when at least one Xero organisation is connected (a token row exists).
+ * Distinguishes "not connected yet" (show the connect screen) from "connected
+ * but no verdict computed yet" (run the analysis), so a fresh connect never
+ * lands the user back on the connect screen with nothing happening.
+ */
+export async function hasConnectedOrg(): Promise<boolean> {
+  try {
+    const store = getStore();
+    const { data } = await store
+      .from("xero_tokens")
+      .select("tenant_id")
+      .limit(1)
+      .maybeSingle();
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+}

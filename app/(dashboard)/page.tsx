@@ -1,4 +1,5 @@
-import { resolveVerdict } from "@/app/api/_lib/verdict-source"
+import { resolveVerdict, hasConnectedOrg } from "@/app/api/_lib/verdict-source"
+import { AnalyseScreen } from "./_components/AnalyseScreen"
 import { ConnectScreen } from "./_components/ConnectScreen"
 import { Dashboard } from "./_components/Dashboard"
 import { Sidebar } from "./_components/Sidebar"
@@ -15,6 +16,10 @@ export default async function DashboardPage() {
   const { data: verdict } = await resolveVerdict()
 
   if (!verdict) {
+    // Connected but no verdict yet: run the analysis. Not connected: connect.
+    if (await hasConnectedOrg()) {
+      return <AnalyseScreen />
+    }
     return <ConnectScreen />
   }
 

@@ -17,6 +17,9 @@ import { runPipeline } from "@/lib/pipeline/run";
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// The full run makes several Xero calls plus attribution; allow more than the
+// default serverless window so the connect-then-analyse flow completes.
+export const maxDuration = 60;
 
 interface PipelineBody {
   tenantId?: string;
