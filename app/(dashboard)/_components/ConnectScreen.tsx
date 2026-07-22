@@ -91,6 +91,18 @@ export function ConnectScreen() {
           Read-only to start. Your data stays in Xero.
         </p>
       </div>
+
+      <p className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 text-xs text-gray-400 dark:text-gray-500">
+        Built by{" "}
+        <a
+          href="https://siphoyawe.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline transition-colors hover:text-brand-green"
+        >
+          Sipho Yawe
+        </a>
+      </p>
     </main>
   )
 }
